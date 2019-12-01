@@ -1,0 +1,60 @@
+name: CI
+
+on: [push]
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+      - name: Get golangci
+        run: |
+          # Add go binaries to GOPATH.
+          # FIX: https://github.com/actions/setup-go/issues/14
+          export PATH=${PATH}:`go env GOPATH`/bin
+          go get -u github.com/golangci/golangci-lint/...
+      - uses: actions/checkout@v1
+      - name: check
+        run: |
+          # Add go binaries to GOPATH.
+          # FIX: https://github.com/actions/setup-go/issues/14
+          export PATH=${PATH}:`go env GOPATH`/bin
+          make ci-check
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+      - run: make ci-test
+
+  release-image:
+    env:
+      #PROD_IMAGE_NAME: docker.pkg.github.com/${GITHUB_REPOSITORY}/app
+      PROD_IMAGE_NAME: registry.gitlab.com/${GITHUB_REPOSITORY}
+    needs: [check, test]
+    name: Release image
+    runs-on: ubuntu-latest
+    # Only run in master and when has a tag.
+    if: startsWith(github.ref, 'refs/tags/') && contains(github.ref, 'master')
+    steps:
+      - name: Set tag on VERSION env var
+        run: echo ::set-env name=VERSION::$(echo ${GITHUB_REF:10})
+      - uses: actions/checkout@v1
+      - name: Build image
+        run: make build-image
+      - name: Docker login
+        #run: docker login docker.pkg.github.com -u ${GITHUB_ACTOR} -p ${GITHUB_TOKEN}
+        run: docker login registry.gitlab.com -u ${GITLAB_USER} -p ${GITLAB_TOKEN}
+        env:
+          #GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          GITLAB_TOKEN: ${{secrets.GITLAB_TOKEN}}
+          GITLAB_USER: slok
+      - name: Publish image
+        run: make publish-image
