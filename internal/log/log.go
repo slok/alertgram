@@ -14,7 +14,7 @@ type Logger interface {
 type dummy int
 
 // Dummy is a dummy logger.
-var Dummy = dummy(0)
+const Dummy = dummy(0)
 
 func (d dummy) WithData(map[string]interface{}) Logger { return d }
 func (dummy) Infof(string, ...interface{})             {}
