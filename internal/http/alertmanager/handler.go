@@ -11,17 +11,17 @@ func (w webhookHandler) HandleAlerts() gin.HandlerFunc {
 		reqAlerts := alertGroupV4{}
 		err := ctx.BindJSON(&reqAlerts)
 		if err != nil {
-			ctx.AbortWithError(http.StatusBadRequest, err)
+			_ = ctx.AbortWithError(http.StatusBadRequest, err).SetType(gin.ErrorTypePublic)
 		}
 
 		model, err := reqAlerts.toDomain()
 		if err != nil {
-			ctx.AbortWithError(http.StatusBadRequest, err)
+			_ = ctx.AbortWithError(http.StatusBadRequest, err).SetType(gin.ErrorTypePublic)
 		}
 
 		err = w.forwarder.Forward(ctx.Request.Context(), model)
 		if err != nil {
-			ctx.AbortWithError(http.StatusInternalServerError, err)
+			_ = ctx.AbortWithError(http.StatusInternalServerError, err).SetType(gin.ErrorTypePublic)
 		}
 	}
 }
