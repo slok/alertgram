@@ -22,7 +22,12 @@ func TestServiceForward(t *testing.T) {
 		mock       func(ns []*forwardmock.Notifier)
 		expErr     error
 	}{
-		"A forwarded alert should be send to all notifiers.": {
+		"A nil alert group should fail.": {
+			mock:   func(ns []*forwardmock.Notifier) {},
+			expErr: forward.ErrInvalidAlertGroup,
+		},
+
+		"A forwarded alerts should be send to all notifiers.": {
 			alertGroup: &model.AlertGroup{
 				ID:     "test-group",
 				Alerts: []model.Alert{model.Alert{Name: "test"}},
