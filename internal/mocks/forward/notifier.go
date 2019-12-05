@@ -15,13 +15,13 @@ type Notifier struct {
 	mock.Mock
 }
 
-// Notify provides a mock function with given fields: ctx, alert
-func (_m *Notifier) Notify(ctx context.Context, alert model.Alert) error {
-	ret := _m.Called(ctx, alert)
+// Notify provides a mock function with given fields: ctx, alertGroup
+func (_m *Notifier) Notify(ctx context.Context, alertGroup *model.AlertGroup) error {
+	ret := _m.Called(ctx, alertGroup)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, model.Alert) error); ok {
-		r0 = rf(ctx, alert)
+	if rf, ok := ret.Get(0).(func(context.Context, *model.AlertGroup) error); ok {
+		r0 = rf(ctx, alertGroup)
 	} else {
 		r0 = ret.Error(0)
 	}
