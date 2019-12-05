@@ -8,6 +8,6 @@ import (
 
 // Notifier knows how to notify alerts to different backends.
 type Notifier interface {
-	Notify(ctx context.Context, alert model.Alert) error
+	Notify(ctx context.Context, alertGroup *model.AlertGroup) error
 	Type() string
 }
