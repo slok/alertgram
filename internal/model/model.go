@@ -30,11 +30,11 @@ type Alert struct {
 	// Status is the status of the alert.
 	Status AlertStatus
 	// Labels is data that defines the alert.
-	Labels map[string]interface{}
+	Labels map[string]string
 	// Annotations is a simple map of values that can be used to
 	// add more info to the alert but don't define the alert nature
 	// commonly this is used to add description, titles...
-	Annotations map[string]interface{}
+	Annotations map[string]string
 }
 
 // AlertGroup is a group of alerts that share some of
@@ -48,10 +48,10 @@ type AlertGroup struct {
 	Status AlertStatus
 	// Labels is like the alerts labels but shared
 	// by all the alerts.
-	Labels map[string]interface{}
+	Labels map[string]string
 	// Annotations is like the alerts annotations but
 	// shared by all the alerts.
-	Annotations map[string]interface{}
+	Annotations map[string]string
 	// Alerts are the alerts in the group.
 	Alerts []Alert
 }
