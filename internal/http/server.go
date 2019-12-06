@@ -74,7 +74,7 @@ func NewServer(cfg Config) (*Server, error) {
 		server:        httpServer,
 		listenAddress: cfg.ListenAddress,
 		drainTimeout:  cfg.DrainTimeout,
-		logger: cfg.Logger.WithData(log.KV{
+		logger: cfg.Logger.WithValues(log.KV{
 			"service": "http-server",
 			"addr":    cfg.ListenAddress,
 		}),
