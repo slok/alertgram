@@ -24,7 +24,7 @@ type service struct {
 func NewService(notifiers []Notifier, l log.Logger) Service {
 	return &service{
 		notifiers: notifiers,
-		logger:    l.WithData(log.KV{"service": "forward.Service"}),
+		logger:    l.WithValues(log.KV{"service": "forward.Service"}),
 	}
 }
 
@@ -43,7 +43,7 @@ func (s service) Forward(ctx context.Context, alertGroup *model.AlertGroup) erro
 	for _, not := range s.notifiers {
 		err := not.Notify(ctx, alertGroup)
 		if err != nil {
-			s.logger.WithData(log.KV{"notifier": not.Type(), "alertGroupID": alertGroup.ID}).Errorf("could not notify alert group")
+			s.logger.WithValues(log.KV{"notifier": not.Type(), "alertGroupID": alertGroup.ID}).Errorf("could not notify alert group")
 		}
 	}
 
