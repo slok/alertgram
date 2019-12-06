@@ -41,7 +41,9 @@ func NewConfig() (*Config, error) {
 
 	c.registerFlags()
 
-	c.app.Parse(os.Args[1:])
+	if _, err := c.app.Parse(os.Args[1:]); err != nil {
+		return nil, err
+	}
 	if err := c.validate(); err != nil {
 		return nil, err
 	}
