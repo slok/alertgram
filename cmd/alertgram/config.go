@@ -13,9 +13,11 @@ var (
 
 // flag descriptions.
 const (
-	descAMListenAddr  = "The listen address where the server will be listening to alertmanager's webhook request."
-	descAMWebhookPath = "The path where the server will be handling the alertmanager webhook alert requests."
-	descDebug         = "Run the application in debug mode."
+	descAMListenAddr      = "The listen address where the server will be listening to alertmanager's webhook request."
+	descAMWebhookPath     = "The path where the server will be handling the alertmanager webhook alert requests."
+	descTelegramAPIToken  = "The token that will be used to use the telegram API to send the alerts."
+	descTelegramDefChatID = "The default ID of the chat (group/channel) in telegram where the alerts will be sent."
+	descDebug             = "Run the application in debug mode."
 )
 
 const (
@@ -27,6 +29,8 @@ const (
 type Config struct {
 	AlertmanagerListenAddr  string
 	AlertmanagerWebhookPath string
+	TeletramAPIToken        string
+	TelegramChatID          int64
 	DebugMode               bool
 
 	app *kingpin.Application
@@ -54,6 +58,8 @@ func NewConfig() (*Config, error) {
 func (c *Config) registerFlags() {
 	c.app.Flag("alertmanager.listen-address", descAMListenAddr).Default(defAMListenAddr).StringVar(&c.AlertmanagerListenAddr)
 	c.app.Flag("alertmanager.webhook-path", descAMWebhookPath).Default(defAMWebhookPath).StringVar(&c.AlertmanagerWebhookPath)
+	c.app.Flag("telegram.api-token", descTelegramAPIToken).Required().StringVar(&c.TeletramAPIToken)
+	c.app.Flag("telegram.chat-id", descTelegramDefChatID).Required().Int64Var(&c.TelegramChatID)
 	c.app.Flag("debug", descDebug).BoolVar(&c.DebugMode)
 }
 
