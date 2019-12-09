@@ -14,6 +14,7 @@ import (
 	"github.com/slok/alertgram/internal/http/alertmanager"
 	"github.com/slok/alertgram/internal/log"
 	"github.com/slok/alertgram/internal/log/logrus"
+	"github.com/slok/alertgram/internal/notify"
 	"github.com/slok/alertgram/internal/notify/telegram"
 )
 
@@ -38,14 +39,21 @@ func (m *Main) Run() error {
 	if err != nil {
 		return err
 	}
-	notifier, err := telegram.NewNotifier(telegram.Config{
-		DryRun:                m.cfg.TelegramDryRun,
-		Client:                tgCli,
-		DefaultTelegramChatID: m.cfg.TelegramChatID,
-		Logger:                m.logger,
-	})
-	if err != nil {
-		return err
+	tplRenderer := notify.DefaultTemplateRenderer
+
+	var notifier forward.Notifier
+	if m.cfg.NotifyDryRun {
+		notifier = notify.NewLogger(tplRenderer, m.logger)
+	} else {
+		notifier, err = telegram.NewNotifier(telegram.Config{
+			TemplateRenderer:      tplRenderer,
+			Client:                tgCli,
+			DefaultTelegramChatID: m.cfg.TelegramChatID,
+			Logger:                m.logger,
+		})
+		if err != nil {
+			return err
+		}
 	}
 
 	// Domain services.
