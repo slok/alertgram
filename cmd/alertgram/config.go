@@ -18,7 +18,7 @@ const (
 	descTelegramAPIToken  = "The token that will be used to use the telegram API to send the alerts."
 	descTelegramDefChatID = "The default ID of the chat (group/channel) in telegram where the alerts will be sent."
 	descDebug             = "Run the application in debug mode."
-	descTelegramDryRun    = "Dry run the telegram notification and show in the terminal instead of sending."
+	descNotifyDryRun      = "Dry run the notification and show in the terminal instead of sending."
 )
 
 const (
@@ -33,7 +33,7 @@ type Config struct {
 	TeletramAPIToken        string
 	TelegramChatID          int64
 	DebugMode               bool
-	TelegramDryRun          bool
+	NotifyDryRun            bool
 
 	app *kingpin.Application
 }
@@ -62,7 +62,7 @@ func (c *Config) registerFlags() {
 	c.app.Flag("alertmanager.webhook-path", descAMWebhookPath).Default(defAMWebhookPath).StringVar(&c.AlertmanagerWebhookPath)
 	c.app.Flag("telegram.api-token", descTelegramAPIToken).Required().StringVar(&c.TeletramAPIToken)
 	c.app.Flag("telegram.chat-id", descTelegramDefChatID).Required().Int64Var(&c.TelegramChatID)
-	c.app.Flag("telegram.dry-run", descTelegramDryRun).BoolVar(&c.TelegramDryRun)
+	c.app.Flag("notify.dry-run", descNotifyDryRun).BoolVar(&c.NotifyDryRun)
 	c.app.Flag("debug", descDebug).BoolVar(&c.DebugMode)
 }
 
