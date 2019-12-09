@@ -35,7 +35,7 @@ func (t TemplateRendererFunc) Render(ctx context.Context, ag *model.AlertGroup) 
 func NewHTMLTemplateRenderer(tpl string) (TemplateRenderer, error) {
 	t, err := template.New("tpl").Funcs(sprig.FuncMap()).Parse(tpl)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", err, ErrRenderTemplate)
+		return nil, fmt.Errorf("error rendering template: %w", err)
 	}
 
 	return TemplateRendererFunc(func(_ context.Context, ag *model.AlertGroup) (string, error) {
@@ -48,8 +48,7 @@ func renderAlertGroup(ag *model.AlertGroup, t *template.Template) (string, error
 	var b bytes.Buffer
 	err := t.Execute(&b, ag)
 	if err != nil {
-		err = fmt.Errorf("%w: %s", ErrRenderTemplate, err)
-		return "", fmt.Errorf("%s: %w", err, ErrRenderTemplate)
+		return "", fmt.Errorf("%w: %s", ErrRenderTemplate, err)
 	}
 
 	return b.String(), nil

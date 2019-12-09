@@ -51,7 +51,7 @@ func TestNotify(t *testing.T) {
 		alertGroup *model.AlertGroup
 		expErr     error
 	}{
-		"A alertGroup should be rendered and notify to telegram (Default template).": {
+		"A alertGroup should be rendered and send the message to telegram.": {
 			cfg: telegram.Config{
 				DefaultTelegramChatID: 1234,
 			},
