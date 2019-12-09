@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/oklog/run"
 
 	"github.com/slok/alertgram/internal/forward"
@@ -13,7 +14,7 @@ import (
 	"github.com/slok/alertgram/internal/http/alertmanager"
 	"github.com/slok/alertgram/internal/log"
 	"github.com/slok/alertgram/internal/log/logrus"
-	"github.com/slok/alertgram/internal/notify"
+	"github.com/slok/alertgram/internal/notify/telegram"
 )
 
 // Main is the main application.
@@ -33,10 +34,22 @@ func (m *Main) Run() error {
 	m.logger = logrus.New(m.cfg.DebugMode)
 
 	// Dependencies.
-	notifier := notify.Dummy
+	tgCli, err := tgbotapi.NewBotAPI(m.cfg.TeletramAPIToken)
+	if err != nil {
+		return err
+	}
+	notifier, err := telegram.NewNotifier(telegram.Config{
+		DryRun:                m.cfg.TelegramDryRun,
+		Client:                tgCli,
+		DefaultTelegramChatID: m.cfg.TelegramChatID,
+		Logger:                m.logger,
+	})
+	if err != nil {
+		return err
+	}
 
 	// Domain services.
-	forwardSvc := forward.NewService([]forward.Notifier{notifier}, log.Dummy)
+	forwardSvc := forward.NewService([]forward.Notifier{notifier}, m.logger)
 
 	var g run.Group
 

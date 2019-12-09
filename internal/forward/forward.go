@@ -43,7 +43,8 @@ func (s service) Forward(ctx context.Context, alertGroup *model.AlertGroup) erro
 	for _, not := range s.notifiers {
 		err := not.Notify(ctx, alertGroup)
 		if err != nil {
-			s.logger.WithValues(log.KV{"notifier": not.Type(), "alertGroupID": alertGroup.ID}).Errorf("could not notify alert group")
+			s.logger.WithValues(log.KV{"notifier": not.Type(), "alertGroupID": alertGroup.ID}).
+				Errorf("could not notify alert group: %s", err)
 		}
 	}
 
