@@ -2,18 +2,22 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/oklog/run"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/slok/alertgram/internal/forward"
 	internalhttp "github.com/slok/alertgram/internal/http"
 	"github.com/slok/alertgram/internal/http/alertmanager"
 	"github.com/slok/alertgram/internal/log"
 	"github.com/slok/alertgram/internal/log/logrus"
+	metricsprometheus "github.com/slok/alertgram/internal/metrics/prometheus"
 	"github.com/slok/alertgram/internal/notify"
 	"github.com/slok/alertgram/internal/notify/telegram"
 )
@@ -35,11 +39,13 @@ func (m *Main) Run() error {
 	m.logger = logrus.New(m.cfg.DebugMode)
 
 	// Dependencies.
+	metricsRecorder := metricsprometheus.New(prometheus.DefaultRegisterer)
+
 	tgCli, err := tgbotapi.NewBotAPI(m.cfg.TeletramAPIToken)
 	if err != nil {
 		return err
 	}
-	tplRenderer := notify.DefaultTemplateRenderer
+	tplRenderer := notify.NewMeasureTemplateRenderer("default", metricsRecorder, notify.DefaultTemplateRenderer)
 
 	var notifier forward.Notifier
 	if m.cfg.NotifyDryRun {
@@ -55,10 +61,11 @@ func (m *Main) Run() error {
 			return err
 		}
 	}
+	notifier = forward.NewMeasureNotifier(metricsRecorder, notifier)
 
 	// Domain services.
 	forwardSvc := forward.NewService([]forward.Notifier{notifier}, m.logger)
-
+	forwardSvc = forward.NewMeasureService(metricsRecorder, forwardSvc)
 	var g run.Group
 
 	// Alertmanager webhook server.
@@ -75,6 +82,31 @@ func (m *Main) Run() error {
 		server, err := internalhttp.NewServer(internalhttp.Config{
 			Handler:       h,
 			ListenAddress: m.cfg.AlertmanagerListenAddr,
+			Logger:        logger,
+		})
+		if err != nil {
+			return err
+		}
+
+		g.Add(
+			func() error {
+				return server.ListenAndServe()
+			},
+			func(_ error) {
+				if err := server.DrainAndShutdown(); err != nil {
+					logger.Errorf("error while draining connections")
+				}
+			})
+	}
+
+	// Metrics.
+	{
+		logger := m.logger.WithValues(log.KV{"server": "metrics"})
+		h := http.NewServeMux()
+		h.Handle(m.cfg.MetricsPath, promhttp.Handler())
+		server, err := internalhttp.NewServer(internalhttp.Config{
+			Handler:       h,
+			ListenAddress: m.cfg.MetricsListenAddr,
 			Logger:        logger,
 		})
 		if err != nil {
