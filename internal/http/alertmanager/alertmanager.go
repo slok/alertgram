@@ -5,6 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/slok/go-http-metrics/metrics"
+	metricsmiddleware "github.com/slok/go-http-metrics/middleware"
+	metricsmiddlewaregin "github.com/slok/go-http-metrics/middleware/gin"
 
 	"github.com/slok/alertgram/internal/forward"
 	"github.com/slok/alertgram/internal/log"
@@ -12,9 +15,11 @@ import (
 
 // Config is the configuration of the WebhookHandler.
 type Config struct {
-	WebhookPath string
-	Forwarder   forward.Service
-	Logger      log.Logger
+	MetricsRecorder metrics.Recorder
+	WebhookPath     string
+	Forwarder       forward.Service
+	Debug           bool
+	Logger          log.Logger
 }
 
 func (c *Config) defaults() error {
@@ -49,12 +54,22 @@ func NewHandler(cfg Config) (http.Handler, error) {
 		return nil, err
 	}
 
+	if !cfg.Debug {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	w := webhookHandler{
 		cfg:       cfg,
 		engine:    gin.New(),
 		forwarder: cfg.Forwarder,
 		logger:    cfg.Logger,
 	}
+
+	// Metrics middleware.
+	mdlw := metricsmiddleware.New(metricsmiddleware.Config{
+		Recorder: cfg.MetricsRecorder,
+	})
+	w.engine.Use(metricsmiddlewaregin.Handler("", mdlw))
 
 	// Register routes.
 	w.routes()

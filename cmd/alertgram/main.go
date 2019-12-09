@@ -72,9 +72,11 @@ func (m *Main) Run() error {
 	{
 		logger := m.logger.WithValues(log.KV{"server": "alertmanager-handler"})
 		h, err := alertmanager.NewHandler(alertmanager.Config{
-			WebhookPath: m.cfg.AlertmanagerWebhookPath,
-			Forwarder:   forwardSvc,
-			Logger:      logger,
+			Debug:           m.cfg.DebugMode,
+			MetricsRecorder: metricsRecorder,
+			WebhookPath:     m.cfg.AlertmanagerWebhookPath,
+			Forwarder:       forwardSvc,
+			Logger:          logger,
 		})
 		if err != nil {
 			return err
