@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	httpmetrics "github.com/slok/go-http-metrics/metrics"
+	httpmetricsprometheus "github.com/slok/go-http-metrics/metrics/prometheus"
 
 	"github.com/slok/alertgram/internal/forward"
 	"github.com/slok/alertgram/internal/notify"
@@ -16,6 +18,8 @@ const prefix = "alertgram"
 // Recorder knows how to measure the different metrics
 // interfaces of the application.
 type Recorder struct {
+	httpmetrics.Recorder
+
 	forwardServiceOpDurHistogram   *prometheus.HistogramVec
 	forwardNotifierOpDurHistogram  *prometheus.HistogramVec
 	templateRendererOpDurHistogram *prometheus.HistogramVec
@@ -24,6 +28,10 @@ type Recorder struct {
 // New returns a new Prometheus recorder for the app.
 func New(reg prometheus.Registerer) *Recorder {
 	r := &Recorder{
+		Recorder: httpmetricsprometheus.NewRecorder(httpmetricsprometheus.Config{
+			Registry: reg,
+		}),
+
 		forwardServiceOpDurHistogram: prometheus.NewHistogramVec(prometheus.HistogramOpts{
 			Namespace: prefix,
 			Subsystem: "forward",
@@ -78,3 +86,4 @@ func (r Recorder) ObserveTemplateRendererOpDuration(ctx context.Context, rendere
 var _ forward.NotifierMetricsRecorder = &Recorder{}
 var _ forward.ServiceMetricsRecorder = &Recorder{}
 var _ notify.TemplateRendererMetricsRecorder = &Recorder{}
+var _ httpmetrics.Recorder = &Recorder{}
