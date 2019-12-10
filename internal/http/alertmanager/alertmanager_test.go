@@ -24,13 +24,14 @@ var t0 = time.Now().UTC()
 
 func getBaseAlert() model.Alert {
 	return model.Alert{
-		ID:          "test-alert",
-		Name:        "test-alert-name",
-		Start:       t0.Add(-10 * time.Minute),
-		End:         t0.Add(-3 * time.Minute),
-		Status:      model.AlertStatusFiring,
-		Labels:      map[string]string{prommodel.AlertNameLabel: "test-alert-name", "lK1": "lV1", "lK2": "lV2"},
-		Annotations: map[string]string{"aK1": "aV1", "aK2": "aV2"},
+		ID:           "test-alert",
+		Name:         "test-alert-name",
+		StartsAt:     t0.Add(-10 * time.Minute),
+		EndsAt:       t0.Add(-3 * time.Minute),
+		Status:       model.AlertStatusFiring,
+		Labels:       map[string]string{prommodel.AlertNameLabel: "test-alert-name", "lK1": "lV1", "lK2": "lV2"},
+		Annotations:  map[string]string{"aK1": "aV1", "aK2": "aV2"},
+		GeneratorURL: "http://test.com",
 	}
 }
 
@@ -41,11 +42,9 @@ func getBaseAlerts() *model.AlertGroup {
 	al2.ID += "-2"
 
 	return &model.AlertGroup{
-		ID:          "test-group",
-		Status:      model.AlertStatusFiring,
-		Labels:      map[string]string{"gclK1": "gclV1", "gclK2": "gclV2"},
-		Annotations: map[string]string{"gcaK1": "gcaV1", "gcaK2": "gcaV2"},
-		Alerts:      []model.Alert{al1, al2},
+		ID:     "test-group",
+		Labels: map[string]string{"glK1": "glV1", "glK2": "glV2"},
+		Alerts: []model.Alert{al1, al2},
 	}
 }
 
@@ -77,7 +76,7 @@ func getBaseAlertmanagerAlerts() webhook.Message {
 			CommonAnnotations: map[string]string{"gcaK1": "gcaV1", "gcaK2": "gcaV2"},
 			ExternalURL:       "http://test.com",
 		},
-		Version:  "test",
+		Version:  "4",
 		GroupKey: "test-group",
 	}
 }
