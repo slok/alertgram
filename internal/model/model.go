@@ -23,10 +23,10 @@ type Alert struct {
 	ID string
 	// Name is the name of the alert.
 	Name string
-	// Start is when the alert has been started.
-	Start time.Time
+	// StartsAt is when the alert has been started.
+	StartsAt time.Time
 	// End is when the alert has been ended.
-	End time.Time
+	EndsAt time.Time
 	// Status is the status of the alert.
 	Status AlertStatus
 	// Labels is data that defines the alert.
@@ -35,7 +35,12 @@ type Alert struct {
 	// add more info to the alert but don't define the alert nature
 	// commonly this is used to add description, titles...
 	Annotations map[string]string
+	// GeneratorURL is the url that generated the alert (eg. Prometheus metrics).
+	GeneratorURL string
 }
+
+// IsFiring returns if the alerts is firing.
+func (a Alert) IsFiring() bool { return a.Status == AlertStatusFiring }
 
 // AlertGroup is a group of alerts that share some of
 // the information like the state, common metadata...
@@ -44,14 +49,8 @@ type Alert struct {
 type AlertGroup struct {
 	// ID is the group of alerts ID.
 	ID string
-	// Status is the status that share the group.
-	Status AlertStatus
-	// Labels is like the alerts labels but shared
-	// by all the alerts.
+	// Labels are the labels of the group.
 	Labels map[string]string
-	// Annotations is like the alerts annotations but
-	// shared by all the alerts.
-	Annotations map[string]string
 	// Alerts are the alerts in the group.
 	Alerts []Alert
 }

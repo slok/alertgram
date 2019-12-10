@@ -12,7 +12,7 @@ import (
 var (
 	// ErrCantDeserialize will be used when for some reason the
 	// received data can't be deserialized.
-	ErrCantDeserialize = errors.New("cant deserialize the received alerts")
+	ErrCantDeserialize = errors.New("can't deserialize the received alerts")
 )
 
 // alertGroupV4 are the alertGroup received by the webhook
@@ -22,27 +22,30 @@ var (
 type alertGroupV4 webhook.Message
 
 func (a alertGroupV4) toDomain() (*model.AlertGroup, error) {
+	if a.Version != "4" {
+		return nil, errors.New("not supported alert group version")
+	}
+
 	// Map alerts.
 	alerts := make([]model.Alert, len(a.Alerts))
 	for i := 0; i < len(a.Alerts); i++ {
 		alert := a.Alerts[i]
 		alerts[i] = model.Alert{
-			ID:          alert.Fingerprint,
-			Name:        alert.Labels[prommodel.AlertNameLabel],
-			Start:       alert.StartsAt,
-			End:         alert.EndsAt,
-			Status:      alertStatusToDomain(alert.Status),
-			Labels:      alert.Labels,
-			Annotations: alert.Annotations,
+			ID:           alert.Fingerprint,
+			Name:         alert.Labels[prommodel.AlertNameLabel],
+			StartsAt:     alert.StartsAt,
+			EndsAt:       alert.EndsAt,
+			Status:       alertStatusToDomain(alert.Status),
+			Labels:       alert.Labels,
+			Annotations:  alert.Annotations,
+			GeneratorURL: alert.GeneratorURL,
 		}
 	}
 
 	ag := &model.AlertGroup{
-		ID:          a.GroupKey,
-		Status:      alertStatusToDomain(a.Status),
-		Labels:      a.CommonLabels,
-		Annotations: a.CommonAnnotations,
-		Alerts:      alerts,
+		ID:     a.GroupKey,
+		Labels: a.GroupLabels,
+		Alerts: alerts,
 	}
 
 	return ag, nil
