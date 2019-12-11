@@ -37,7 +37,7 @@ func (m *Main) Run() error {
 	if err != nil {
 		return err
 	}
-	m.logger = logrus.New(m.cfg.DebugMode)
+	m.logger = logrus.New(m.cfg.DebugMode).WithValues(log.KV{"version": Version})
 
 	// Dependencies.
 	metricsRecorder := metricsprometheus.New(prometheus.DefaultRegisterer)
