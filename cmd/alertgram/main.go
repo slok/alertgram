@@ -11,6 +11,7 @@ import (
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	metricsmiddleware "github.com/slok/go-http-metrics/middleware"
 
 	"github.com/slok/alertgram/internal/forward"
 	internalhttp "github.com/slok/alertgram/internal/http"
@@ -104,8 +105,10 @@ func (m *Main) Run() error {
 	// Metrics.
 	{
 		logger := m.logger.WithValues(log.KV{"server": "metrics"})
-		h := http.NewServeMux()
-		h.Handle(m.cfg.MetricsPath, promhttp.Handler())
+		mux := http.NewServeMux()
+		mux.Handle(m.cfg.MetricsPath, promhttp.Handler())
+		mdlw := metricsmiddleware.New(metricsmiddleware.Config{Service: "metrics", Recorder: metricsRecorder})
+		h := mdlw.Handler("", mux)
 		server, err := internalhttp.NewServer(internalhttp.Config{
 			Handler:       h,
 			ListenAddress: m.cfg.MetricsListenAddr,
