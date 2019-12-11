@@ -6,10 +6,10 @@ require (
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/oklog/run v1.0.0
 	github.com/prometheus/alertmanager v0.19.0
-	github.com/prometheus/client_golang v1.1.0
+	github.com/prometheus/client_golang v1.2.1
 	github.com/prometheus/common v0.7.0
 	github.com/sirupsen/logrus v1.4.2
-	github.com/slok/go-http-metrics v0.5.0
+	github.com/slok/go-http-metrics v0.6.0
 	github.com/stretchr/testify v1.4.0
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6

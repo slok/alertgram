@@ -67,6 +67,7 @@ func NewHandler(cfg Config) (http.Handler, error) {
 
 	// Metrics middleware.
 	mdlw := metricsmiddleware.New(metricsmiddleware.Config{
+		Service:  "alertmanager-api",
 		Recorder: cfg.MetricsRecorder,
 	})
 	w.engine.Use(metricsmiddlewaregin.Handler("", mdlw))
