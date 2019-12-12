@@ -2,6 +2,10 @@
 
 Alertgram is the easiest way to forward alerts to [Telegram] (Supports [Prometheus alertmanager] alerts).
 
+<p align="center">
+    <img src="https://i.imgur.com/4jdOFj9.jpg" width="40%" align="center" alt="alertgram">
+</p>
+
 ## Introduction
 
 Everything started as a way of forwarding [Prometheus alertmanager] alerts to [Telegram] because the solutions that I found where too complex, I just wanted to forward alerts to channels without trouble. And Alertgram is just that, a simple app that forwards alerts to Telegram groups and channels.
@@ -23,7 +27,7 @@ To forward alerts to Telegram the minimum options that need to be set are `--tel
 ### Simple example
 
 ```bash
-docker run -p8080:8080 -p8081:8081 docker.pkg.github.com/slok/alertgram/app:latest --telegram.api-token=XXXXX --telegram.chat-id=YYYYY
+docker run -p8080:8080 -p8081:8081 slok/alertgram:latest --telegram.api-token=XXXXX --telegram.chat-id=YYYYY
 ```
 
 ### Production
@@ -35,7 +39,7 @@ docker run -p8080:8080 -p8081:8081 docker.pkg.github.com/slok/alertgram/app:late
 
 ## Metrics
 
-The app comes with [Prometheus] metrics, it measures the forwarded alerts, HTTP requests... with rate and latency.
+The app comes with [Prometheus] metrics, it measures the forwarded alerts, HTTP requests, errors... with rate and latency.
 
 By default are served on `/metrics` on `0.0.0.0:8081`
 
