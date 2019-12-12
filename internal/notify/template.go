@@ -65,8 +65,10 @@ func (defRenderer) Render(_ context.Context, ag *model.AlertGroup) (string, erro
 }
 
 var defTemplate = template.Must(template.New("def").Funcs(sprig.FuncMap()).Parse(`
-🚨🚨 FIRING {{ .Alerts | len }} 🚨🚨
+🚨🚨 FIRING ALERTS 🚨🚨
 {{- range .Alerts }}
+{{- if .IsFiring }}
+
 💥💥💥 <b>{{ .Labels.alertname }}</b> 💥💥💥
   {{ .Annotations.message }}
   {{- range $key, $value := .Labels }}
@@ -87,5 +89,6 @@ var defTemplate = template.Must(template.New("def").Funcs(sprig.FuncMap()).Parse
 	{{- end}}
 	{{- end}}
   {{- end}}
+{{- end }}
 {{- end }}
 `))

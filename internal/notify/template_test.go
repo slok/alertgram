@@ -43,6 +43,7 @@ func TestTemplateRenderer(t *testing.T) {
 				ID: "test-alert",
 				Alerts: []model.Alert{
 					{
+						Status: model.AlertStatusFiring,
 						Labels: map[string]string{
 							"alertname": "ServicePodIsRestarting",
 							"chatid":    "-1001234567890",
@@ -58,6 +59,7 @@ func TestTemplateRenderer(t *testing.T) {
 						},
 					},
 					{
+						Status: model.AlertStatusFiring,
 						Labels: map[string]string{
 							"alertname": "ServicePodIsRestarting",
 							"chatid":    "-1001234567890",
@@ -72,10 +74,20 @@ func TestTemplateRenderer(t *testing.T) {
 							"runbook": "https://github.test/runbooks/pod-restarting.md",
 						},
 					},
+					{
+						Status: model.AlertStatusResolved,
+						Labels: map[string]string{
+							"alertname": "ServicePodIsRestarting",
+						},
+						Annotations: map[string]string{
+							"message": "There has been restarting more than 5 times over 20 minutes",
+						},
+					},
 				},
 			},
 			expData: `
-🚨🚨 FIRING 2 🚨🚨
+🚨🚨 FIRING ALERTS 🚨🚨
+
 💥💥💥 <b>ServicePodIsRestarting</b> 💥💥💥
   There has been restarting more than 5 times over 20 minutes
 	🔹 chatid: -1001234567890
@@ -85,6 +97,7 @@ func TestTemplateRenderer(t *testing.T) {
 	🔹 severity: telegram
 	🔸 <a href="https://prometheus.test/my-graph">graph</a>
 	🔸 <a href="https://github.test/runbooks/pod-restarting.md">runbook</a>
+
 💥💥💥 <b>ServicePodIsRestarting</b> 💥💥💥
   There has been restarting more than 5 times over 20 minutes
 	🔹 chatid: -1001234567890
