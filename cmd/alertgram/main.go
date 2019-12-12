@@ -107,6 +107,7 @@ func (m *Main) Run() error {
 		logger := m.logger.WithValues(log.KV{"server": "metrics"})
 		mux := http.NewServeMux()
 		mux.Handle(m.cfg.MetricsPath, promhttp.Handler())
+		mux.Handle(m.cfg.MetricsHCPath, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte(`{"status":"ok"}`)) }))
 		mdlw := metricsmiddleware.New(metricsmiddleware.Config{Service: "metrics", Recorder: metricsRecorder})
 		h := mdlw.Handler("", mux)
 		server, err := internalhttp.NewServer(internalhttp.Config{
