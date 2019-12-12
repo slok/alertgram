@@ -4,6 +4,7 @@
 
 ### Added
 
+- Simple health check
 - Prometheus metrics.
 - Telegram notifier.
 - Dry-run notifier.

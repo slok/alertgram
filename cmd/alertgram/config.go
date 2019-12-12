@@ -19,6 +19,7 @@ const (
 	descTelegramDefChatID = "The default ID of the chat (group/channel) in telegram where the alerts will be sent."
 	descMetricsListenAddr = "The listen address where the metrics will be being served."
 	descMetricsPath       = "The path where the metrics will be being served."
+	descMetricsHCPath     = "The path where the healthcheck will be being served, it uses the same port as the metrics."
 	descDebug             = "Run the application in debug mode."
 	descNotifyDryRun      = "Dry run the notification and show in the terminal instead of sending."
 )
@@ -28,6 +29,7 @@ const (
 	defAMWebhookPath     = "/alerts"
 	defMetricsListenAddr = ":8081"
 	defMetricsPath       = "/metrics"
+	defMetricsHCPath     = "/status"
 )
 
 // Config has the configuration of the application.
@@ -38,6 +40,7 @@ type Config struct {
 	TelegramChatID          int64
 	MetricsListenAddr       string
 	MetricsPath             string
+	MetricsHCPath           string
 	DebugMode               bool
 	NotifyDryRun            bool
 
@@ -70,6 +73,7 @@ func (c *Config) registerFlags() {
 	c.app.Flag("telegram.chat-id", descTelegramDefChatID).Required().Int64Var(&c.TelegramChatID)
 	c.app.Flag("metrics.listen-address", descMetricsListenAddr).Default(defMetricsListenAddr).StringVar(&c.MetricsListenAddr)
 	c.app.Flag("metrics.path", descMetricsPath).Default(defMetricsPath).StringVar(&c.MetricsPath)
+	c.app.Flag("metrics.health-path", descMetricsHCPath).Default(defMetricsHCPath).StringVar(&c.MetricsHCPath)
 	c.app.Flag("notify.dry-run", descNotifyDryRun).BoolVar(&c.NotifyDryRun)
 	c.app.Flag("debug", descDebug).BoolVar(&c.DebugMode)
 }
