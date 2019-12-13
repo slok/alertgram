@@ -65,7 +65,5 @@ Also remember that you can use `--debug` flag.
 [telegram]: https://telegram.org/
 [telegram-token]: https://core.telegram.org/bots#6-botfather
 [telegram-chat-id]: https://github.com/GabrielRF/telegram-id
-[alertmanager-configuration]: https://github.com/slok/alertgram
-[kubernetes-deployment]: https://github.com/slok/alertgram
 [alertmanager-configuration]: docs/alertmanager
 [kubernetes-deployment]: docs/kubernetes
