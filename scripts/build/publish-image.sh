@@ -12,4 +12,10 @@ if [ -z ${IMAGE} ]; then
     exit 1
 fi
 
+echo "Pushing image ${IMAGE}:${VERSION}..."
 docker push ${IMAGE}:${VERSION}
+
+if [ ! -z ${TAG_IMAGE_LATEST} ]; then
+    echo "Pushing image ${IMAGE}:latest..."
+    docker push ${IMAGE}:latest
+fi
