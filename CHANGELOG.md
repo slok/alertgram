@@ -2,6 +2,8 @@
 
 ## [unreleased] - YYYY-MM-DD
 
+## [0.1.0] - 2019-12-13
+
 ### Added
 
 - Custom templates.
