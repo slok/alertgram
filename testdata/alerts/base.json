@@ -1,0 +1,73 @@
+{
+  "receiver": "team1",
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "ServicePodIsRestarting",
+        "chatid": "-1001234567890",
+        "instance": "10.0.0.221:20464",
+        "job": "kubernetes-metrics",
+        "owner": "team1",
+        "severity": "telegram",
+        "env": "production",
+        "pod": "ns1/pod-service1-f76c976c4-9hlgv"
+      },
+      "annotations": {
+        "message": "The has been restarting more than 5 times over 20 minutes",
+        "Graph": "https://prometheus.test/d/taQlRuxik/k8s-cluster-summary?orgId=1&refresh=30s&fullscreen&panelId=11&from=now-3h&to=now&var-cluster=prometheus&var-ds=&var-datasource=prometheus&var-node=k8s-master&var-namespace=monitoring",
+        "Runbook": "https://github.test/runbooks/pod-restarting.md"
+      },
+      "startsAt": "2019-12-06T20:46:37.903Z",
+      "generatorURL": "https://example.com/graph#..."
+    },
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "ServicePodIsRestarting",
+        "chatid": "-1001234567890",
+        "instance": "10.0.0.221:20464",
+        "job": "kubernetes-metrics",
+        "owner": "team1",
+        "severity": "telegram",
+        "env": "production",
+        "pod": "ns1/pod-service64-f5c7dd9cfc5-8scht"
+      },
+      "annotations": {
+        "message": "The has been restarting more than 5 times over 20 minutes",
+        "Graph": "https://prometheus.test/d/taQlRuxik/k8s-cluster-summary?orgId=1&refresh=30s&fullscreen&panelId=11&from=now-3h&to=now&var-cluster=prometheus&var-ds=&var-datasource=prometheus&var-node=k8s-master&var-namespace=monitoring",
+        "Runbook": "https://github.test/runbooks/pod-restarting.md"
+      },
+      "startsAt": "2019-12-06T20:46:37.903Z",
+      "generatorURL": "https://example.com/graph#..."
+    },
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "ServicePodIsPending",
+        "chatid": "-1001234567890",
+        "instance": "10.0.0.221:20464",
+        "job": "kubernetes-metrics",
+        "owner": "team1",
+        "severity": "telegram",
+        "env": "production",
+        "pod": "ns2/pod-service2-954bb8c86-p6svs"
+      },
+      "annotations": {
+        "message": "The has been pending more than 10 minutes",
+        "Graph": "https://prometheus.test/d/taQlRuxik/k8s-cluster-summary?orgId=1&refresh=30s&fullscreen&panelId=11&from=now-3h&to=now&var-cluster=prometheus&var-ds=&var-datasource=prometheus&var-node=k8s-master&var-namespace=monitoring",
+        "Runbook": "https://github.test/runbooks/pod-restarting.md"
+      },
+      "startsAt": "2019-12-06T20:46:37.903Z",
+      "generatorURL": "https://example.com/graph"
+    }
+  ],
+  "groupLabels": {
+    "alertname": "something_happend",
+    "instance": "server01.int:9100"
+  },
+  "externalURL": "https://prometheus.example.com",
+  "version": "4",
+  "groupKey": "1234567890"
+}

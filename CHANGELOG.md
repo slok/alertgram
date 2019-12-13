@@ -4,6 +4,7 @@
 
 ### Added
 
+- Custom templates.
 - Docs for Kubernetes deployment and Alertmanager configuration.
 - Simple health check
 - Prometheus metrics.

@@ -13,15 +13,16 @@ var (
 
 // flag descriptions.
 const (
-	descAMListenAddr      = "The listen address where the server will be listening to alertmanager's webhook request."
-	descAMWebhookPath     = "The path where the server will be handling the alertmanager webhook alert requests."
-	descTelegramAPIToken  = "The token that will be used to use the telegram API to send the alerts."
-	descTelegramDefChatID = "The default ID of the chat (group/channel) in telegram where the alerts will be sent."
-	descMetricsListenAddr = "The listen address where the metrics will be being served."
-	descMetricsPath       = "The path where the metrics will be being served."
-	descMetricsHCPath     = "The path where the healthcheck will be being served, it uses the same port as the metrics."
-	descDebug             = "Run the application in debug mode."
-	descNotifyDryRun      = "Dry run the notification and show in the terminal instead of sending."
+	descAMListenAddr       = "The listen address where the server will be listening to alertmanager's webhook request."
+	descAMWebhookPath      = "The path where the server will be handling the alertmanager webhook alert requests."
+	descTelegramAPIToken   = "The token that will be used to use the telegram API to send the alerts."
+	descTelegramDefChatID  = "The default ID of the chat (group/channel) in telegram where the alerts will be sent."
+	descMetricsListenAddr  = "The listen address where the metrics will be being served."
+	descMetricsPath        = "The path where the metrics will be being served."
+	descMetricsHCPath      = "The path where the healthcheck will be being served, it uses the same port as the metrics."
+	descDebug              = "Run the application in debug mode."
+	descNotifyDryRun       = "Dry run the notification and show in the terminal instead of sending."
+	descNotifyTemplatePath = "The path to set a custom template for the notification messages."
 )
 
 const (
@@ -41,6 +42,7 @@ type Config struct {
 	MetricsListenAddr       string
 	MetricsPath             string
 	MetricsHCPath           string
+	NotifyTemplate          *os.File
 	DebugMode               bool
 	NotifyDryRun            bool
 
@@ -75,6 +77,7 @@ func (c *Config) registerFlags() {
 	c.app.Flag("metrics.path", descMetricsPath).Default(defMetricsPath).StringVar(&c.MetricsPath)
 	c.app.Flag("metrics.health-path", descMetricsHCPath).Default(defMetricsHCPath).StringVar(&c.MetricsHCPath)
 	c.app.Flag("notify.dry-run", descNotifyDryRun).BoolVar(&c.NotifyDryRun)
+	c.app.Flag("notify.template-path", descNotifyTemplatePath).FileVar(&c.NotifyTemplate)
 	c.app.Flag("debug", descDebug).BoolVar(&c.DebugMode)
 }
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
@@ -46,14 +47,31 @@ func (m *Main) Run() error {
 	if err != nil {
 		return err
 	}
-	tplRenderer := notify.NewMeasureTemplateRenderer("default", metricsRecorder, notify.DefaultTemplateRenderer)
+
+	// Select the kind of template renderer: default or custom template.
+	var tmplRenderer notify.TemplateRenderer
+	if m.cfg.NotifyTemplate != nil {
+		tmpl, err := ioutil.ReadAll(m.cfg.NotifyTemplate)
+		if err != nil {
+			return err
+		}
+		_ = m.cfg.NotifyTemplate.Close()
+		tmplRenderer, err = notify.NewHTMLTemplateRenderer(string(tmpl))
+		if err != nil {
+			return err
+		}
+		tmplRenderer = notify.NewMeasureTemplateRenderer("custom", metricsRecorder, tmplRenderer)
+		m.logger.Infof("using custom template at %s", m.cfg.NotifyTemplate.Name())
+	} else {
+		tmplRenderer = notify.NewMeasureTemplateRenderer("default", metricsRecorder, notify.DefaultTemplateRenderer)
+	}
 
 	var notifier forward.Notifier
 	if m.cfg.NotifyDryRun {
-		notifier = notify.NewLogger(tplRenderer, m.logger)
+		notifier = notify.NewLogger(tmplRenderer, m.logger)
 	} else {
 		notifier, err = telegram.NewNotifier(telegram.Config{
-			TemplateRenderer:      tplRenderer,
+			TemplateRenderer:      tmplRenderer,
 			Client:                tgCli,
 			DefaultTelegramChatID: m.cfg.TelegramChatID,
 			Logger:                m.logger,
@@ -156,7 +174,7 @@ func (m *Main) Run() error {
 func main() {
 	m := Main{}
 	if err := m.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "error running the app: %s", err)
+		fmt.Fprintf(os.Stderr, "error running the app: %s\n", err)
 		os.Exit(1)
 	}
 

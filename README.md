@@ -47,7 +47,7 @@ By default are served on `/metrics` on `0.0.0.0:8081`
 
 You can use the `--notify.dry-run` to show the alerts on the terminal instead of forwarding them to telegram.
 
-Note that the required options are required, so I would sugest to do this before starting to develop with dry-run mode:
+Note that the required options are required, so I would suggest to do this before starting to develop with dry-run mode:
 
 ```bash
 export ALERTGRAM_TELEGRAM_API_TOKEN=fake
@@ -55,6 +55,30 @@ export ALERTGRAM_TELEGRAM_CHAT_ID=1234567890
 ```
 
 Also remember that you can use `--debug` flag.
+
+## FAQ
+
+### Can I use custom template?
+
+Yes!, use the flag `--notify.template-path`. You can check [testdata/templates](testdata/templates) for examples.
+
+The templates are [HTML Go templates] with [Sprig] functions, so you can use these also.
+
+You can use also the notification dry run mode to check your templates without the need
+to notify on telegram:
+
+```bash
+export ALERTGRAM_TELEGRAM_API_TOKEN=fake
+export ALERTGRAM_TELEGRAM_CHAT_ID=1234567890
+
+go run ./cmd/alertgram/ --notify.template-path=./testdata/templates/simple.tmpl --debug --notify.dry-run
+```
+
+To send an alert easily and check the template rendering without an alertmanager, prometheus, alerts... you can use the test alerts that are on [testdata/alerts](testdata/alerts):
+
+```bash
+curl -i http://127.0.0.1:8080/alerts -d @./testdata/alerts/base.json
+```
 
 [github-actions-image]: https://github.com/slok/alertgram/workflows/CI/badge.svg
 [github-actions-url]: https://github.com/slok/alertgram/actions
@@ -67,3 +91,5 @@ Also remember that you can use `--debug` flag.
 [telegram-chat-id]: https://github.com/GabrielRF/telegram-id
 [alertmanager-configuration]: docs/alertmanager
 [kubernetes-deployment]: docs/kubernetes
+[html go templates]: https://golang.org/pkg/html/template/
+[sprig]: http://masterminds.github.io/sprig
