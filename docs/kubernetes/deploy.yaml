@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertgram
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertgram
+  template:
+    metadata:
+      labels:
+        app: alertgram
+    spec:
+      containers:
+        - name: alertgram
+          image: slok/alertgram:db08cd4
+          envFrom:
+            - secretRef:
+                name: alertgram
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: metrics
+              containerPort: 8081
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: 8081
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 20m
+              memory: 40Mi
+
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: alertgram
+  namespace: monitoring
+  labels:
+    app: alertgram
+stringData:
+  ALERTGRAM_TELEGRAM_API_TOKEN: "CHANGE_ME_TELEGRAM_API_TOKEN"
+  ALERTGRAM_TELEGRAM_CHAT_ID: "CHANGE_ME_TELEGRAM_CHAT_ID"
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: alertgram
+  namespace: monitoring
+  labels:
+    app: alertgram
+spec:
+  selector:
+    app: alertgram
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+    - name: metrics
+      port: 8081
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: alertgram
+  namespace: monitoring
+  labels:
+    app: alertgram
+    prometheus: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: alertgram
+  endpoints:
+    - port: metrics
+      honorLabels: false

@@ -34,8 +34,8 @@ docker run -p8080:8080 -p8081:8081 slok/alertgram:latest --telegram.api-token=XX
 
 - [Get telegram API token][telegram-token]
 - [Get telegram chat IDs][telegram-chat-id]
-- [Configure Alertmanager (TODO)][alertmanager-configuration]
-- [Deploy on Kubernetes (TODO)][kubernetes-deployment]
+- [Configure Alertmanager][alertmanager-configuration]
+- [Deploy on Kubernetes][kubernetes-deployment]
 
 ## Metrics
 
@@ -67,3 +67,5 @@ Also remember that you can use `--debug` flag.
 [telegram-chat-id]: https://github.com/GabrielRF/telegram-id
 [alertmanager-configuration]: https://github.com/slok/alertgram
 [kubernetes-deployment]: https://github.com/slok/alertgram
+[alertmanager-configuration]: docs/alertmanager
+[kubernetes-deployment]: docs/kubernetes
