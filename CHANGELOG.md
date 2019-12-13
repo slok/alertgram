@@ -4,6 +4,7 @@
 
 ### Added
 
+- Docs for Kubernetes deployment and Alertmanager configuration.
 - Simple health check
 - Prometheus metrics.
 - Telegram notifier.
