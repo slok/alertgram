@@ -61,9 +61,10 @@ func TestNotify(t *testing.T) {
 				mr.On("Render", mock.Anything, expAlertGroup).Once().Return(expMsgData, nil)
 
 				expMsg := tgbotapi.MessageConfig{
-					BaseChat:  tgbotapi.BaseChat{ChatID: 1234},
-					ParseMode: "HTML",
-					Text:      expMsgData,
+					BaseChat:              tgbotapi.BaseChat{ChatID: 1234},
+					ParseMode:             "HTML",
+					DisableWebPagePreview: true,
+					Text:                  expMsgData,
 				}
 				mcli.On("Send", expMsg).Once().Return(tgbotapi.Message{}, nil)
 			},
@@ -92,9 +93,10 @@ func TestNotify(t *testing.T) {
 				mr.On("Render", mock.Anything, expAlertGroup).Once().Return(expMsgData, nil)
 
 				expMsg := tgbotapi.MessageConfig{
-					BaseChat:  tgbotapi.BaseChat{ChatID: 1234},
-					ParseMode: "HTML",
-					Text:      expMsgData,
+					BaseChat:              tgbotapi.BaseChat{ChatID: 1234},
+					ParseMode:             "HTML",
+					DisableWebPagePreview: true,
+					Text:                  expMsgData,
 				}
 				mcli.On("Send", expMsg).Once().Return(tgbotapi.Message{}, errTest)
 			},

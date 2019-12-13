@@ -112,6 +112,7 @@ func (n notifier) alertGroupToMessage(ctx context.Context, a *model.AlertGroup) 
 
 	msg := tgbotapi.NewMessage(n.cfg.DefaultTelegramChatID, data)
 	msg.ParseMode = "HTML"
+	msg.DisableWebPagePreview = true // TODO(slok): Make it configurable?
 	return msg, nil
 }
 
