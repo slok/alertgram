@@ -79,8 +79,9 @@ func NewNotifier(cfg Config) (forward.Notifier, error) {
 	}, nil
 }
 
-func (n notifier) Notify(ctx context.Context, alertGroup *model.AlertGroup) error {
-	logger := n.logger.WithValues(log.KV{"alertGroup": alertGroup.ID, "alertsNumber": len(alertGroup.Alerts)})
+func (n notifier) Notify(ctx context.Context, notification forward.Notification) error {
+	ag := notification.AlertGroup
+	logger := n.logger.WithValues(log.KV{"alertGroup": ag.ID, "alertsNumber": len(ag.Alerts)})
 	select {
 	case <-ctx.Done():
 		logger.Infof("context cancelled, not notifying alerts")
@@ -88,7 +89,7 @@ func (n notifier) Notify(ctx context.Context, alertGroup *model.AlertGroup) erro
 	default:
 	}
 
-	msg, err := n.alertGroupToMessage(ctx, alertGroup)
+	msg, err := n.alertGroupToMessage(ctx, &ag)
 	if err != nil {
 		return fmt.Errorf("could not format the alerts to message: %w", err)
 	}

@@ -10,14 +10,15 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/slok/alertgram/internal/forward"
 	notifymock "github.com/slok/alertgram/internal/mocks/notify"
 	telegrammock "github.com/slok/alertgram/internal/mocks/notify/telegram"
 	"github.com/slok/alertgram/internal/model"
 	"github.com/slok/alertgram/internal/notify/telegram"
 )
 
-func GetBaseAlertGroup() *model.AlertGroup {
-	return &model.AlertGroup{
+func GetBaseAlertGroup() model.AlertGroup {
+	return model.AlertGroup{
 		ID: "test-alert",
 		Alerts: []model.Alert{
 			{
@@ -46,10 +47,10 @@ var errTest = errors.New("whatever")
 
 func TestNotify(t *testing.T) {
 	tests := map[string]struct {
-		cfg        telegram.Config
-		mocks      func(t *testing.T, mcli *telegrammock.Client, mr *notifymock.TemplateRenderer)
-		alertGroup *model.AlertGroup
-		expErr     error
+		cfg          telegram.Config
+		mocks        func(t *testing.T, mcli *telegrammock.Client, mr *notifymock.TemplateRenderer)
+		notification forward.Notification
+		expErr       error
 	}{
 		"A alertGroup should be rendered and send the message to telegram.": {
 			cfg: telegram.Config{
@@ -58,7 +59,7 @@ func TestNotify(t *testing.T) {
 			mocks: func(t *testing.T, mcli *telegrammock.Client, mr *notifymock.TemplateRenderer) {
 				expMsgData := "rendered template"
 				expAlertGroup := GetBaseAlertGroup()
-				mr.On("Render", mock.Anything, expAlertGroup).Once().Return(expMsgData, nil)
+				mr.On("Render", mock.Anything, &expAlertGroup).Once().Return(expMsgData, nil)
 
 				expMsg := tgbotapi.MessageConfig{
 					BaseChat:              tgbotapi.BaseChat{ChatID: 1234},
@@ -68,7 +69,9 @@ func TestNotify(t *testing.T) {
 				}
 				mcli.On("Send", expMsg).Once().Return(tgbotapi.Message{}, nil)
 			},
-			alertGroup: GetBaseAlertGroup(),
+			notification: forward.Notification{
+				AlertGroup: GetBaseAlertGroup(),
+			},
 		},
 
 		"A error in the template rendering process should be processed.": {
@@ -77,10 +80,12 @@ func TestNotify(t *testing.T) {
 			},
 			mocks: func(t *testing.T, mcli *telegrammock.Client, mr *notifymock.TemplateRenderer) {
 				expAlertGroup := GetBaseAlertGroup()
-				mr.On("Render", mock.Anything, expAlertGroup).Once().Return("", errTest)
+				mr.On("Render", mock.Anything, &expAlertGroup).Once().Return("", errTest)
 			},
-			alertGroup: GetBaseAlertGroup(),
-			expErr:     errTest,
+			notification: forward.Notification{
+				AlertGroup: GetBaseAlertGroup(),
+			},
+			expErr: errTest,
 		},
 
 		"A error in the notification send process should be processed with communication error.": {
@@ -90,7 +95,7 @@ func TestNotify(t *testing.T) {
 			mocks: func(t *testing.T, mcli *telegrammock.Client, mr *notifymock.TemplateRenderer) {
 				expMsgData := "rendered template"
 				expAlertGroup := GetBaseAlertGroup()
-				mr.On("Render", mock.Anything, expAlertGroup).Once().Return(expMsgData, nil)
+				mr.On("Render", mock.Anything, &expAlertGroup).Once().Return(expMsgData, nil)
 
 				expMsg := tgbotapi.MessageConfig{
 					BaseChat:              tgbotapi.BaseChat{ChatID: 1234},
@@ -100,8 +105,10 @@ func TestNotify(t *testing.T) {
 				}
 				mcli.On("Send", expMsg).Once().Return(tgbotapi.Message{}, errTest)
 			},
-			alertGroup: GetBaseAlertGroup(),
-			expErr:     telegram.ErrComm,
+			notification: forward.Notification{
+				AlertGroup: GetBaseAlertGroup(),
+			},
+			expErr: telegram.ErrComm,
 		},
 	}
 
@@ -120,7 +127,7 @@ func TestNotify(t *testing.T) {
 			// Execute.
 			n, err := telegram.NewNotifier(test.cfg)
 			require.NoError(err)
-			err = n.Notify(context.TODO(), test.alertGroup)
+			err = n.Notify(context.TODO(), test.notification)
 
 			// Check.
 			if test.expErr != nil && assert.Error(err) {

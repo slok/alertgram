@@ -33,12 +33,14 @@ func TestServiceForward(t *testing.T) {
 				Alerts: []model.Alert{model.Alert{Name: "test"}},
 			},
 			mock: func(ns []*forwardmock.Notifier) {
-				expAlertGroup := &model.AlertGroup{
-					ID:     "test-group",
-					Alerts: []model.Alert{model.Alert{Name: "test"}},
+				expNotification := forward.Notification{
+					AlertGroup: model.AlertGroup{
+						ID:     "test-group",
+						Alerts: []model.Alert{model.Alert{Name: "test"}},
+					},
 				}
 				for _, n := range ns {
-					n.On("Notify", mock.Anything, expAlertGroup).Once().Return(nil)
+					n.On("Notify", mock.Anything, expNotification).Once().Return(nil)
 				}
 			},
 		},
@@ -49,9 +51,11 @@ func TestServiceForward(t *testing.T) {
 				Alerts: []model.Alert{model.Alert{Name: "test"}},
 			},
 			mock: func(ns []*forwardmock.Notifier) {
-				expAlertGroup := &model.AlertGroup{
-					ID:     "test-group",
-					Alerts: []model.Alert{model.Alert{Name: "test"}},
+				expNotification := forward.Notification{
+					AlertGroup: model.AlertGroup{
+						ID:     "test-group",
+						Alerts: []model.Alert{model.Alert{Name: "test"}},
+					},
 				}
 				for i, n := range ns {
 					err := errTest
@@ -59,7 +63,7 @@ func TestServiceForward(t *testing.T) {
 					if i != 0 {
 						err = nil
 					}
-					n.On("Notify", mock.Anything, expAlertGroup).Once().Return(err)
+					n.On("Notify", mock.Anything, expNotification).Once().Return(err)
 					n.On("Type").Maybe().Return("")
 				}
 			},

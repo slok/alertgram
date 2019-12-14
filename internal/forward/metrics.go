@@ -52,11 +52,11 @@ func NewMeasureNotifier(rec NotifierMetricsRecorder, next Notifier) Notifier {
 	}
 }
 
-func (m measureNotifier) Notify(ctx context.Context, ag *model.AlertGroup) (err error) {
+func (m measureNotifier) Notify(ctx context.Context, n Notification) (err error) {
 	defer func(t0 time.Time) {
 		m.rec.ObserveForwardNotifierOpDuration(ctx, m.notifierType, "Notify", err == nil, time.Since(t0))
 	}(time.Now())
-	return m.next.Notify(ctx, ag)
+	return m.next.Notify(ctx, n)
 }
 
 func (m measureNotifier) Type() string {

@@ -41,7 +41,7 @@ func (s service) Forward(ctx context.Context, alertGroup *model.AlertGroup) erro
 
 	// TODO(slok): Add concurrency using workers.
 	for _, not := range s.notifiers {
-		err := not.Notify(ctx, alertGroup)
+		err := not.Notify(ctx, Notification{AlertGroup: *alertGroup})
 		if err != nil {
 			s.logger.WithValues(log.KV{"notifier": not.Type(), "alertGroupID": alertGroup.ID}).
 				Errorf("could not notify alert group: %s", err)

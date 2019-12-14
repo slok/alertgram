@@ -5,7 +5,6 @@ import (
 
 	"github.com/slok/alertgram/internal/forward"
 	"github.com/slok/alertgram/internal/log"
-	"github.com/slok/alertgram/internal/model"
 )
 
 type dummy int
@@ -13,8 +12,8 @@ type dummy int
 // Dummy is a dummy notifier.
 const Dummy = dummy(0)
 
-func (dummy) Notify(ctx context.Context, alertGroup *model.AlertGroup) error { return nil }
-func (dummy) Type() string                                                   { return "dummy" }
+func (dummy) Notify(ctx context.Context, notification forward.Notification) error { return nil }
+func (dummy) Type() string                                                        { return "dummy" }
 
 type logger struct {
 	renderer TemplateRenderer
@@ -30,10 +29,10 @@ func NewLogger(r TemplateRenderer, l log.Logger) forward.Notifier {
 	}
 }
 
-func (l logger) Notify(ctx context.Context, alertGroup *model.AlertGroup) error {
-	logger := l.logger.WithValues(log.KV{"alertGroup": alertGroup.ID, "alertsNumber": len(alertGroup.Alerts)})
+func (l logger) Notify(ctx context.Context, n forward.Notification) error {
+	logger := l.logger.WithValues(log.KV{"alertGroup": n.AlertGroup.ID, "alertsNumber": len(n.AlertGroup.Alerts)})
 
-	alertText, err := l.renderer.Render(ctx, alertGroup)
+	alertText, err := l.renderer.Render(ctx, &n.AlertGroup)
 	if err != nil {
 		return err
 	}
