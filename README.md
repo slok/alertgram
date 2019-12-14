@@ -6,9 +6,25 @@ Alertgram is the easiest way to forward alerts to [Telegram] (Supports [Promethe
     <img src="https://i.imgur.com/4jdOFj9.jpg" width="40%" align="center" alt="alertgram">
 </p>
 
+## Table of contents
+
+- [Introduction](#introduction)
+- [Input alerts](#input-alerts)
+- [Options](#options)
+- [Run](#run)
+  - [Simple example](#simple-example)
+  - [Production](#production)
+- [Metrics](#metrics)
+- [Development and debugging](#development-and-debugging)
+- [FAQ](#faq)
+  - [Only alertmanager alerts are supported?](#only-alertmanager-alerts-are-supported-)
+  - [Where does alertgram listen to alertmanager alerts?](#where-does-alertgram-listen-to-alertmanager-alerts-)
+  - [Can I notify to different chats?](#can-i-notify-to-different-chats-)
+  - [Can I use custom templates?](#can-i-use-custom-templates-)
+
 ## Introduction
 
-Everything started as a way of forwarding [Prometheus alertmanager] alerts to [Telegram] because the solutions that I found where too complex, I just wanted to forward alerts to channels without trouble. And Alertgram is just that, a simple app that forwards alerts to Telegram groups and channels.
+Everything started as a way of forwarding [Prometheus alertmanager] alerts to [Telegram] because the solutions that I found were too complex, I just wanted to forward alerts to channels without trouble. And Alertgram is just that, a simple app that forwards alerts to Telegram groups and channels.
 
 ## Input alerts
 
@@ -58,7 +74,28 @@ Also remember that you can use `--debug` flag.
 
 ## FAQ
 
-### Can I use custom template?
+### Only alertmanager alerts are supported?
+
+At this moment yes, but we can add more input alert systems if you want, create an issue
+so we can discuss and implement.
+
+### Where does alertgram listen to alertmanager alerts?
+
+By default in `0.0.0.0:8080/alerts`, but you can use `--alertmanager.listen-address` and
+`--alertmanager.webhook-path` to customize.
+
+### Can I notify to different chats?
+
+There are 3 levels where you could customize the notification chat:
+
+- By default: Using the required `--telegram.chat-id` flag.
+- At URL level: using [query string] parameter, e.g. `0.0.0.0:8080/alerts?chat-id=-1009876543210`.
+  This query param can be customized with `--alertmanager.chat-id-query-string` flag.
+- At alert level: TODO
+
+The preference is in order from the lowest to the highest: Default, URL, Alert.
+
+### Can I use custom templates?
 
 Yes!, use the flag `--notify.template-path`. You can check [testdata/templates](testdata/templates) for examples.
 
@@ -93,3 +130,4 @@ curl -i http://127.0.0.1:8080/alerts -d @./testdata/alerts/base.json
 [kubernetes-deployment]: docs/kubernetes
 [html go templates]: https://golang.org/pkg/html/template/
 [sprig]: http://masterminds.github.io/sprig
+[query string]: https://en.wikipedia.org/wiki/Query_string

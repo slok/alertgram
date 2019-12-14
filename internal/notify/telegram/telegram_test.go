@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/slok/alertgram/internal/forward"
+	"github.com/slok/alertgram/internal/internalerrors"
 	notifymock "github.com/slok/alertgram/internal/mocks/notify"
 	telegrammock "github.com/slok/alertgram/internal/mocks/notify/telegram"
 	"github.com/slok/alertgram/internal/model"
@@ -74,6 +75,29 @@ func TestNotify(t *testing.T) {
 			},
 		},
 
+		"If using a custom chat ID based on notificaiton it should send to that chat.": {
+			cfg: telegram.Config{
+				DefaultTelegramChatID: 1234,
+			},
+			mocks: func(t *testing.T, mcli *telegrammock.Client, mr *notifymock.TemplateRenderer) {
+				expMsgData := "rendered template"
+				expAlertGroup := GetBaseAlertGroup()
+				mr.On("Render", mock.Anything, &expAlertGroup).Once().Return(expMsgData, nil)
+
+				expMsg := tgbotapi.MessageConfig{
+					BaseChat:              tgbotapi.BaseChat{ChatID: -1009876543210},
+					ParseMode:             "HTML",
+					DisableWebPagePreview: true,
+					Text:                  expMsgData,
+				}
+				mcli.On("Send", expMsg).Once().Return(tgbotapi.Message{}, nil)
+			},
+			notification: forward.Notification{
+				ChatID:     "-1009876543210",
+				AlertGroup: GetBaseAlertGroup(),
+			},
+		},
+
 		"A error in the template rendering process should be processed.": {
 			cfg: telegram.Config{
 				DefaultTelegramChatID: 1234,
@@ -86,6 +110,18 @@ func TestNotify(t *testing.T) {
 				AlertGroup: GetBaseAlertGroup(),
 			},
 			expErr: errTest,
+		},
+
+		"A error with an invalid custom Chat ID should be propagated.": {
+			cfg: telegram.Config{
+				DefaultTelegramChatID: 1234,
+			},
+			mocks: func(t *testing.T, mcli *telegrammock.Client, mr *notifymock.TemplateRenderer) {},
+			notification: forward.Notification{
+				ChatID:     "notAnInt64",
+				AlertGroup: GetBaseAlertGroup(),
+			},
+			expErr: internalerrors.ErrInvalidConfiguration,
 		},
 
 		"A error in the notification send process should be processed with communication error.": {

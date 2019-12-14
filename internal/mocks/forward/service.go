@@ -5,6 +5,7 @@ package mocks
 import (
 	context "context"
 
+	forward "github.com/slok/alertgram/internal/forward"
 	mock "github.com/stretchr/testify/mock"
 
 	model "github.com/slok/alertgram/internal/model"
@@ -15,13 +16,13 @@ type Service struct {
 	mock.Mock
 }
 
-// Forward provides a mock function with given fields: ctx, alertGroup
-func (_m *Service) Forward(ctx context.Context, alertGroup *model.AlertGroup) error {
-	ret := _m.Called(ctx, alertGroup)
+// Forward provides a mock function with given fields: ctx, props, alertGroup
+func (_m *Service) Forward(ctx context.Context, props forward.Properties, alertGroup *model.AlertGroup) error {
+	ret := _m.Called(ctx, props, alertGroup)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *model.AlertGroup) error); ok {
-		r0 = rf(ctx, alertGroup)
+	if rf, ok := ret.Get(0).(func(context.Context, forward.Properties, *model.AlertGroup) error); ok {
+		r0 = rf(ctx, props, alertGroup)
 	} else {
 		r0 = ret.Error(0)
 	}

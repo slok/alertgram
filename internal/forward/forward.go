@@ -9,10 +9,19 @@ import (
 	"github.com/slok/alertgram/internal/model"
 )
 
+// Properties are the  properties an AlertGroup can have
+// when the forwarding process is done.
+type Properties struct {
+	// CustomChatID can be used when the forward should be done
+	// to a different target (chat, group, channel, user...)
+	// instead of using the default one.
+	CustomChatID string
+}
+
 // Service is the domain service that forwards alerts
 type Service interface {
 	// Forward knows how to forward alerts from an input to an output.
-	Forward(ctx context.Context, alertGroup *model.AlertGroup) error
+	Forward(ctx context.Context, props Properties, alertGroup *model.AlertGroup) error
 }
 
 type service struct {
@@ -33,15 +42,19 @@ var (
 	ErrInvalidAlertGroup = errors.New("invalid alert group")
 )
 
-func (s service) Forward(ctx context.Context, alertGroup *model.AlertGroup) error {
+func (s service) Forward(ctx context.Context, props Properties, alertGroup *model.AlertGroup) error {
 	// TODO(slok): Add better validation.
 	if alertGroup == nil {
 		return fmt.Errorf("alertgroup can't be empty: %w", ErrInvalidAlertGroup)
 	}
 
 	// TODO(slok): Add concurrency using workers.
+	notification := Notification{
+		AlertGroup: *alertGroup,
+		ChatID:     props.CustomChatID,
+	}
 	for _, not := range s.notifiers {
-		err := not.Notify(ctx, Notification{AlertGroup: *alertGroup})
+		err := not.Notify(ctx, notification)
 		if err != nil {
 			s.logger.WithValues(log.KV{"notifier": not.Type(), "alertGroupID": alertGroup.ID}).
 				Errorf("could not notify alert group: %s", err)

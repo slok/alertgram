@@ -18,6 +18,7 @@ var errTest = errors.New("whatever")
 
 func TestServiceForward(t *testing.T) {
 	tests := map[string]struct {
+		props      forward.Properties
 		alertGroup *model.AlertGroup
 		mock       func(ns []*forwardmock.Notifier)
 		expErr     error
@@ -28,12 +29,16 @@ func TestServiceForward(t *testing.T) {
 		},
 
 		"A forwarded alerts should be send to all notifiers.": {
+			props: forward.Properties{
+				CustomChatID: "-1001234567890",
+			},
 			alertGroup: &model.AlertGroup{
 				ID:     "test-group",
 				Alerts: []model.Alert{model.Alert{Name: "test"}},
 			},
 			mock: func(ns []*forwardmock.Notifier) {
 				expNotification := forward.Notification{
+					ChatID: "-1001234567890",
 					AlertGroup: model.AlertGroup{
 						ID:     "test-group",
 						Alerts: []model.Alert{model.Alert{Name: "test"}},
@@ -79,7 +84,7 @@ func TestServiceForward(t *testing.T) {
 			test.mock([]*forwardmock.Notifier{mn1, mn2})
 
 			svc := forward.NewService([]forward.Notifier{mn1, mn2}, log.Dummy)
-			err := svc.Forward(context.TODO(), test.alertGroup)
+			err := svc.Forward(context.TODO(), test.props, test.alertGroup)
 
 			if test.expErr != nil && assert.Error(err) {
 				assert.True(errors.Is(err, test.expErr))
