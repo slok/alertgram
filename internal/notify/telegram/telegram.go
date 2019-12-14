@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 
 	"github.com/slok/alertgram/internal/forward"
 	"github.com/slok/alertgram/internal/internalerrors"
 	"github.com/slok/alertgram/internal/log"
-	"github.com/slok/alertgram/internal/model"
 	"github.com/slok/alertgram/internal/notify"
 )
 
@@ -79,8 +79,10 @@ func NewNotifier(cfg Config) (forward.Notifier, error) {
 	}, nil
 }
 
-func (n notifier) Notify(ctx context.Context, alertGroup *model.AlertGroup) error {
-	logger := n.logger.WithValues(log.KV{"alertGroup": alertGroup.ID, "alertsNumber": len(alertGroup.Alerts)})
+func (n notifier) Notify(ctx context.Context, notification forward.Notification) error {
+	ag := notification.AlertGroup
+
+	logger := n.logger.WithValues(log.KV{"alertGroup": ag.ID, "alertsNumber": len(ag.Alerts)})
 	select {
 	case <-ctx.Done():
 		logger.Infof("context cancelled, not notifying alerts")
@@ -88,7 +90,7 @@ func (n notifier) Notify(ctx context.Context, alertGroup *model.AlertGroup) erro
 	default:
 	}
 
-	msg, err := n.alertGroupToMessage(ctx, alertGroup)
+	msg, err := n.createMessage(ctx, notification)
 	if err != nil {
 		return fmt.Errorf("could not format the alerts to message: %w", err)
 	}
@@ -104,15 +106,34 @@ func (n notifier) Notify(ctx context.Context, alertGroup *model.AlertGroup) erro
 	return nil
 }
 
-func (n notifier) alertGroupToMessage(ctx context.Context, a *model.AlertGroup) (tgbotapi.Chattable, error) {
-	data, err := n.tplRenderer.Render(ctx, a)
+func (n notifier) getChatID(notification forward.Notification) (int64, error) {
+	if notification.ChatID == "" {
+		return n.cfg.DefaultTelegramChatID, nil
+	}
+
+	chatID, err := strconv.ParseInt(notification.ChatID, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("%w: %s", internalerrors.ErrInvalidConfiguration, err)
+	}
+
+	return chatID, nil
+}
+
+func (n notifier) createMessage(ctx context.Context, notification forward.Notification) (tgbotapi.Chattable, error) {
+	chatID, err := n.getChatID(notification)
+	if err != nil {
+		return nil, fmt.Errorf("could not get a valid telegran chat ID: %w", err)
+	}
+
+	data, err := n.tplRenderer.Render(ctx, &notification.AlertGroup)
 	if err != nil {
 		return nil, fmt.Errorf("error rendering alerts to template: %w", err)
 	}
 
-	msg := tgbotapi.NewMessage(n.cfg.DefaultTelegramChatID, data)
+	msg := tgbotapi.NewMessage(chatID, data)
 	msg.ParseMode = "HTML"
 	msg.DisableWebPagePreview = true // TODO(slok): Make it configurable?
+
 	return msg, nil
 }
 

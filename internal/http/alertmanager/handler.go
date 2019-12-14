@@ -1,9 +1,12 @@
 package alertmanager
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/slok/alertgram/internal/forward"
+	"github.com/slok/alertgram/internal/internalerrors"
 )
 
 func (w webhookHandler) HandleAlerts() gin.HandlerFunc {
@@ -23,9 +26,18 @@ func (w webhookHandler) HandleAlerts() gin.HandlerFunc {
 			return
 		}
 
-		err = w.forwarder.Forward(ctx.Request.Context(), model)
+		props := forward.Properties{
+			CustomChatID: ctx.Query(w.cfg.ChatIDQueryString),
+		}
+		err = w.forwarder.Forward(ctx.Request.Context(), props, model)
 		if err != nil {
 			w.logger.Errorf("error forwarding alert: %s", err)
+
+			if errors.Is(err, internalerrors.ErrInvalidConfiguration) {
+				_ = ctx.AbortWithError(http.StatusBadRequest, err).SetType(gin.ErrorTypePublic)
+				return
+			}
+
 			_ = ctx.AbortWithError(http.StatusInternalServerError, err).SetType(gin.ErrorTypePublic)
 			return
 		}

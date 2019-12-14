@@ -15,11 +15,12 @@ import (
 
 // Config is the configuration of the WebhookHandler.
 type Config struct {
-	MetricsRecorder metrics.Recorder
-	WebhookPath     string
-	Forwarder       forward.Service
-	Debug           bool
-	Logger          log.Logger
+	MetricsRecorder   metrics.Recorder
+	WebhookPath       string
+	ChatIDQueryString string
+	Forwarder         forward.Service
+	Debug             bool
+	Logger            log.Logger
 }
 
 func (c *Config) defaults() error {
@@ -29,6 +30,10 @@ func (c *Config) defaults() error {
 
 	if c.Forwarder == nil {
 		return fmt.Errorf("forward can't be nil")
+	}
+
+	if c.ChatIDQueryString == "" {
+		c.ChatIDQueryString = "chat-id"
 	}
 
 	if c.Logger == nil {

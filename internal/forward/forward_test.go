@@ -18,6 +18,7 @@ var errTest = errors.New("whatever")
 
 func TestServiceForward(t *testing.T) {
 	tests := map[string]struct {
+		props      forward.Properties
 		alertGroup *model.AlertGroup
 		mock       func(ns []*forwardmock.Notifier)
 		expErr     error
@@ -28,17 +29,23 @@ func TestServiceForward(t *testing.T) {
 		},
 
 		"A forwarded alerts should be send to all notifiers.": {
+			props: forward.Properties{
+				CustomChatID: "-1001234567890",
+			},
 			alertGroup: &model.AlertGroup{
 				ID:     "test-group",
 				Alerts: []model.Alert{model.Alert{Name: "test"}},
 			},
 			mock: func(ns []*forwardmock.Notifier) {
-				expAlertGroup := &model.AlertGroup{
-					ID:     "test-group",
-					Alerts: []model.Alert{model.Alert{Name: "test"}},
+				expNotification := forward.Notification{
+					ChatID: "-1001234567890",
+					AlertGroup: model.AlertGroup{
+						ID:     "test-group",
+						Alerts: []model.Alert{model.Alert{Name: "test"}},
+					},
 				}
 				for _, n := range ns {
-					n.On("Notify", mock.Anything, expAlertGroup).Once().Return(nil)
+					n.On("Notify", mock.Anything, expNotification).Once().Return(nil)
 				}
 			},
 		},
@@ -49,9 +56,11 @@ func TestServiceForward(t *testing.T) {
 				Alerts: []model.Alert{model.Alert{Name: "test"}},
 			},
 			mock: func(ns []*forwardmock.Notifier) {
-				expAlertGroup := &model.AlertGroup{
-					ID:     "test-group",
-					Alerts: []model.Alert{model.Alert{Name: "test"}},
+				expNotification := forward.Notification{
+					AlertGroup: model.AlertGroup{
+						ID:     "test-group",
+						Alerts: []model.Alert{model.Alert{Name: "test"}},
+					},
 				}
 				for i, n := range ns {
 					err := errTest
@@ -59,7 +68,7 @@ func TestServiceForward(t *testing.T) {
 					if i != 0 {
 						err = nil
 					}
-					n.On("Notify", mock.Anything, expAlertGroup).Once().Return(err)
+					n.On("Notify", mock.Anything, expNotification).Once().Return(err)
 					n.On("Type").Maybe().Return("")
 				}
 			},
@@ -75,7 +84,7 @@ func TestServiceForward(t *testing.T) {
 			test.mock([]*forwardmock.Notifier{mn1, mn2})
 
 			svc := forward.NewService([]forward.Notifier{mn1, mn2}, log.Dummy)
-			err := svc.Forward(context.TODO(), test.alertGroup)
+			err := svc.Forward(context.TODO(), test.props, test.alertGroup)
 
 			if test.expErr != nil && assert.Error(err) {
 				assert.True(errors.Is(err, test.expErr))

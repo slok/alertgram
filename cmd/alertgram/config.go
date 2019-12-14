@@ -15,6 +15,7 @@ var (
 const (
 	descAMListenAddr       = "The listen address where the server will be listening to alertmanager's webhook request."
 	descAMWebhookPath      = "The path where the server will be handling the alertmanager webhook alert requests."
+	descAMChatIDQS         = "The optional query string key used to customize the chat id of the notification."
 	descTelegramAPIToken   = "The token that will be used to use the telegram API to send the alerts."
 	descTelegramDefChatID  = "The default ID of the chat (group/channel) in telegram where the alerts will be sent."
 	descMetricsListenAddr  = "The listen address where the metrics will be being served."
@@ -28,6 +29,7 @@ const (
 const (
 	defAMListenAddr      = ":8080"
 	defAMWebhookPath     = "/alerts"
+	defAMChatIDQS        = "chat-id"
 	defMetricsListenAddr = ":8081"
 	defMetricsPath       = "/metrics"
 	defMetricsHCPath     = "/status"
@@ -35,16 +37,17 @@ const (
 
 // Config has the configuration of the application.
 type Config struct {
-	AlertmanagerListenAddr  string
-	AlertmanagerWebhookPath string
-	TeletramAPIToken        string
-	TelegramChatID          int64
-	MetricsListenAddr       string
-	MetricsPath             string
-	MetricsHCPath           string
-	NotifyTemplate          *os.File
-	DebugMode               bool
-	NotifyDryRun            bool
+	AlertmanagerListenAddr         string
+	AlertmanagerWebhookPath        string
+	AlertmanagerChatIDQQueryString string
+	TeletramAPIToken               string
+	TelegramChatID                 int64
+	MetricsListenAddr              string
+	MetricsPath                    string
+	MetricsHCPath                  string
+	NotifyTemplate                 *os.File
+	DebugMode                      bool
+	NotifyDryRun                   bool
 
 	app *kingpin.Application
 }
@@ -71,6 +74,7 @@ func NewConfig() (*Config, error) {
 func (c *Config) registerFlags() {
 	c.app.Flag("alertmanager.listen-address", descAMListenAddr).Default(defAMListenAddr).StringVar(&c.AlertmanagerListenAddr)
 	c.app.Flag("alertmanager.webhook-path", descAMWebhookPath).Default(defAMWebhookPath).StringVar(&c.AlertmanagerWebhookPath)
+	c.app.Flag("alertmanager.chat-id-query-string", descAMChatIDQS).Default(defAMChatIDQS).StringVar(&c.AlertmanagerChatIDQQueryString)
 	c.app.Flag("telegram.api-token", descTelegramAPIToken).Required().StringVar(&c.TeletramAPIToken)
 	c.app.Flag("telegram.chat-id", descTelegramDefChatID).Required().Int64Var(&c.TelegramChatID)
 	c.app.Flag("metrics.listen-address", descMetricsListenAddr).Default(defMetricsListenAddr).StringVar(&c.MetricsListenAddr)

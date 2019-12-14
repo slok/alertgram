@@ -2,6 +2,8 @@ package alertmanager_test
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -15,7 +17,9 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"github.com/slok/alertgram/internal/forward"
 	"github.com/slok/alertgram/internal/http/alertmanager"
+	"github.com/slok/alertgram/internal/internalerrors"
 	forwardmock "github.com/slok/alertgram/internal/mocks/forward"
 	"github.com/slok/alertgram/internal/model"
 )
@@ -83,11 +87,14 @@ func getBaseAlertmanagerAlerts() webhook.Message {
 
 func TestHandleAlerts(t *testing.T) {
 	tests := map[string]struct {
+		config           alertmanager.Config
+		urlPath          string
 		webhookAlertJSON func(t *testing.T) string
 		mock             func(t *testing.T, msvc *forwardmock.Service)
 		expCode          int
 	}{
-		"Alertmanager webhook alerts request should be handled correctly.": {
+		"Alertmanager webhook alerts request should be handled correctly (with defaults).": {
+			urlPath: "/alerts",
 			webhookAlertJSON: func(t *testing.T) string {
 				wa := getBaseAlertmanagerAlerts()
 				body, err := json.Marshal(wa)
@@ -96,9 +103,87 @@ func TestHandleAlerts(t *testing.T) {
 			},
 			mock: func(t *testing.T, msvc *forwardmock.Service) {
 				expAlerts := getBaseAlerts()
-				msvc.On("Forward", mock.Anything, expAlerts).Once().Return(nil)
+				expProps := forward.Properties{}
+				msvc.On("Forward", mock.Anything, expProps, expAlerts).Once().Return(nil)
 			},
 			expCode: http.StatusOK,
+		},
+
+		"Alertmanager webhook alerts request should be handled correctly (with custom params).": {
+			config: alertmanager.Config{
+				WebhookPath:       "/test-alerts",
+				ChatIDQueryString: "custom-telegram-chat-id",
+			},
+			urlPath: "/test-alerts?custom-telegram-chat-id=-1009876543210",
+			webhookAlertJSON: func(t *testing.T) string {
+				wa := getBaseAlertmanagerAlerts()
+				body, err := json.Marshal(wa)
+				require.NoError(t, err)
+				return string(body)
+			},
+			mock: func(t *testing.T, msvc *forwardmock.Service) {
+				expAlerts := getBaseAlerts()
+				expProps := forward.Properties{
+					CustomChatID: "-1009876543210",
+				}
+				msvc.On("Forward", mock.Anything, expProps, expAlerts).Once().Return(nil)
+			},
+			expCode: http.StatusOK,
+		},
+
+		"Internal errors should be propagated to clients (forwarding).": {
+			urlPath: "/alerts",
+			webhookAlertJSON: func(t *testing.T) string {
+				wa := getBaseAlertmanagerAlerts()
+				body, err := json.Marshal(wa)
+				require.NoError(t, err)
+				return string(body)
+			},
+			mock: func(t *testing.T, msvc *forwardmock.Service) {
+				expAlerts := getBaseAlerts()
+				expProps := forward.Properties{}
+				msvc.On("Forward", mock.Anything, expProps, expAlerts).Once().Return(errors.New("whatever"))
+			},
+			expCode: http.StatusInternalServerError,
+		},
+
+		"Configuration errors should be propagated to clients (forwarding).": {
+			urlPath: "/alerts",
+			webhookAlertJSON: func(t *testing.T) string {
+				wa := getBaseAlertmanagerAlerts()
+				body, err := json.Marshal(wa)
+				require.NoError(t, err)
+				return string(body)
+			},
+			mock: func(t *testing.T, msvc *forwardmock.Service) {
+				expAlerts := getBaseAlerts()
+				expProps := forward.Properties{}
+				err := fmt.Errorf("custom error: %w", internalerrors.ErrInvalidConfiguration)
+				msvc.On("Forward", mock.Anything, expProps, expAlerts).Once().Return(err)
+			},
+			expCode: http.StatusBadRequest,
+		},
+
+		"Configuration errors on notification should be propagated to clients (alert mapping).": {
+			urlPath: "/alerts",
+			webhookAlertJSON: func(t *testing.T) string {
+				wa := getBaseAlertmanagerAlerts()
+				wa.Version = "v3"
+				body, err := json.Marshal(wa)
+				require.NoError(t, err)
+				return string(body)
+			},
+			mock:    func(t *testing.T, msvc *forwardmock.Service) {},
+			expCode: http.StatusBadRequest,
+		},
+
+		"Configuration errors on notification should be propagated to clients (JSON formatting).": {
+			urlPath: "/alerts",
+			webhookAlertJSON: func(t *testing.T) string {
+				return "{"
+			},
+			mock:    func(t *testing.T, msvc *forwardmock.Service) {},
+			expCode: http.StatusBadRequest,
 		},
 	}
 
@@ -112,13 +197,11 @@ func TestHandleAlerts(t *testing.T) {
 			test.mock(t, msvc)
 
 			// Execute.
-			h, _ := alertmanager.NewHandler(alertmanager.Config{
-				WebhookPath: "/test-alerts",
-				Forwarder:   msvc,
-			})
+			test.config.Forwarder = msvc
+			h, _ := alertmanager.NewHandler(test.config)
 			srv := httptest.NewServer(h)
 			defer srv.Close()
-			req, err := http.NewRequest(http.MethodPost, srv.URL+"/test-alerts", strings.NewReader(test.webhookAlertJSON(t)))
+			req, err := http.NewRequest(http.MethodPost, srv.URL+test.urlPath, strings.NewReader(test.webhookAlertJSON(t)))
 			require.NoError(err)
 			resp, err := http.DefaultClient.Do(req)
 			require.NoError(err)

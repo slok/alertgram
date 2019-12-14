@@ -26,11 +26,20 @@ route:
     group_wait: 30s
     group_interval: 5m
     repeat_interval: 3h
-    receiver: 'telegram'
+    receiver: telegram
+      routes:
+      # Only important alerts.
+      - match_re:
+          severity: ^(oncall|critical)$
+        receiver: telegram-oncall
 
 receivers:
-- name: 'telegram'
+- name: telegram
     webhook_configs:
     - url: 'http://alertgram:8080/alerts'
       send_resolved: false
+
+- name: telegram-oncall
+    webhook_configs:
+    - url: 'http://alertgram:8080/alerts?chat-id=-1001111111111'
 ```

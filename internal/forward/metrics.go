@@ -25,11 +25,11 @@ func NewMeasureService(rec ServiceMetricsRecorder, next Service) Service {
 	}
 }
 
-func (m measureService) Forward(ctx context.Context, ag *model.AlertGroup) (err error) {
+func (m measureService) Forward(ctx context.Context, props Properties, ag *model.AlertGroup) (err error) {
 	defer func(t0 time.Time) {
 		m.rec.ObserveForwardServiceOpDuration(ctx, "Forward", err == nil, time.Since(t0))
 	}(time.Now())
-	return m.next.Forward(ctx, ag)
+	return m.next.Forward(ctx, props, ag)
 }
 
 // NotifierMetricsRecorder knows how to record metrics on forward.Notifier.
@@ -52,11 +52,11 @@ func NewMeasureNotifier(rec NotifierMetricsRecorder, next Notifier) Notifier {
 	}
 }
 
-func (m measureNotifier) Notify(ctx context.Context, ag *model.AlertGroup) (err error) {
+func (m measureNotifier) Notify(ctx context.Context, n Notification) (err error) {
 	defer func(t0 time.Time) {
 		m.rec.ObserveForwardNotifierOpDuration(ctx, m.notifierType, "Notify", err == nil, time.Since(t0))
 	}(time.Now())
-	return m.next.Notify(ctx, ag)
+	return m.next.Notify(ctx, n)
 }
 
 func (m measureNotifier) Type() string {
