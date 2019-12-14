@@ -6,7 +6,7 @@ import (
 	"github.com/slok/alertgram/internal/model"
 )
 
-// Notification is the notification that wants to be sed
+// Notification is the notification that wants to be send
 // via a notifier.
 type Notification struct {
 	// ChatID is an ID to send the notification. In
