@@ -43,3 +43,35 @@ func (w webhookHandler) HandleAlerts() gin.HandlerFunc {
 		}
 	}
 }
+
+func (w webhookHandler) HandleDeadMansSwitch() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		reqAlerts := alertGroupV4{}
+		err := ctx.BindJSON(&reqAlerts)
+		if err != nil {
+			w.logger.Errorf("error unmarshalling JSON: %s", err)
+			_ = ctx.AbortWithError(http.StatusBadRequest, err).SetType(gin.ErrorTypePublic)
+			return
+		}
+
+		model, err := reqAlerts.toDomain()
+		if err != nil {
+			w.logger.Errorf("error mapping to domain models: %s", err)
+			_ = ctx.AbortWithError(http.StatusBadRequest, err).SetType(gin.ErrorTypePublic)
+			return
+		}
+
+		err = w.deadmansswitcher.PushSwitch(ctx.Request.Context(), model)
+		if err != nil {
+			w.logger.Errorf("error pushing dead mans switch push: %s", err)
+
+			if errors.Is(err, internalerrors.ErrInvalidConfiguration) {
+				_ = ctx.AbortWithError(http.StatusBadRequest, err).SetType(gin.ErrorTypePublic)
+				return
+			}
+
+			_ = ctx.AbortWithError(http.StatusInternalServerError, err).SetType(gin.ErrorTypePublic)
+			return
+		}
+	}
+}
