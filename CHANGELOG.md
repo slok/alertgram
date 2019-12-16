@@ -2,6 +2,8 @@
 
 ## [unreleased] - YYYY-MM-DD
 
+## [0.2.0] - 2019-12-16
+
 ### Added
 
 - Dead man's switch option with Alertmanager.
@@ -22,5 +24,6 @@
 - Alertmanager compatible webhook API.
 - Models and forwarding domain service.
 
-[unreleased]: https://github.com/slok/alertgram/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/slok/alertgram/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/slok/alertgram/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/slok/alertgram/releases/tag/v0.1.0
