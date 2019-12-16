@@ -4,6 +4,7 @@
 
 ### Added
 
+- Dead man's switch option with Alertmanager.
 - Alertmanager API accepts a query string param with a custom chat ID.
 - Telegram notifier can send to customized chats.
 

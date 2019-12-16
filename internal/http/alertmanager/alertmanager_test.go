@@ -20,6 +20,7 @@ import (
 	"github.com/slok/alertgram/internal/forward"
 	"github.com/slok/alertgram/internal/http/alertmanager"
 	"github.com/slok/alertgram/internal/internalerrors"
+	deadmansswitchmock "github.com/slok/alertgram/internal/mocks/deadmansswitch"
 	forwardmock "github.com/slok/alertgram/internal/mocks/forward"
 	"github.com/slok/alertgram/internal/model"
 )
@@ -131,7 +132,7 @@ func TestHandleAlerts(t *testing.T) {
 			expCode: http.StatusOK,
 		},
 
-		"Internal errors should be propagated to clients (forwarding).": {
+		"Alertmanager webhook internal errors should be propagated to clients (forwarding).": {
 			urlPath: "/alerts",
 			webhookAlertJSON: func(t *testing.T) string {
 				wa := getBaseAlertmanagerAlerts()
@@ -147,7 +148,7 @@ func TestHandleAlerts(t *testing.T) {
 			expCode: http.StatusInternalServerError,
 		},
 
-		"Configuration errors should be propagated to clients (forwarding).": {
+		"Alertmanager webhook configuration errors should be propagated to clients (forwarding).": {
 			urlPath: "/alerts",
 			webhookAlertJSON: func(t *testing.T) string {
 				wa := getBaseAlertmanagerAlerts()
@@ -164,7 +165,7 @@ func TestHandleAlerts(t *testing.T) {
 			expCode: http.StatusBadRequest,
 		},
 
-		"Configuration errors on notification should be propagated to clients (alert mapping).": {
+		"Alertmanager webhook configuration errors on notification should be propagated to clients (alert mapping).": {
 			urlPath: "/alerts",
 			webhookAlertJSON: func(t *testing.T) string {
 				wa := getBaseAlertmanagerAlerts()
@@ -177,7 +178,7 @@ func TestHandleAlerts(t *testing.T) {
 			expCode: http.StatusBadRequest,
 		},
 
-		"Configuration errors on notification should be propagated to clients (JSON formatting).": {
+		"Alertmanager webhook configuration errors on notification should be propagated to clients (JSON formatting).": {
 			urlPath: "/alerts",
 			webhookAlertJSON: func(t *testing.T) string {
 				return "{"
@@ -197,7 +198,7 @@ func TestHandleAlerts(t *testing.T) {
 			test.mock(t, msvc)
 
 			// Execute.
-			test.config.Forwarder = msvc
+			test.config.ForwardService = msvc
 			h, _ := alertmanager.NewHandler(test.config)
 			srv := httptest.NewServer(h)
 			defer srv.Close()
@@ -209,6 +210,132 @@ func TestHandleAlerts(t *testing.T) {
 			// Check.
 			assert.Equal(test.expCode, resp.StatusCode)
 			msvc.AssertExpectations(t)
+		})
+	}
+}
+
+func TestHandleDeadMansSwitch(t *testing.T) {
+	tests := map[string]struct {
+		config           alertmanager.Config
+		urlPath          string
+		webhookAlertJSON func(t *testing.T) string
+		mock             func(t *testing.T, msvc *deadmansswitchmock.Service)
+		expCode          int
+	}{
+
+		"Dead man's switch request should be handled correctly (with defaults).": {
+			urlPath: "/alerts/dms",
+			webhookAlertJSON: func(t *testing.T) string {
+				wa := getBaseAlertmanagerAlerts()
+				body, err := json.Marshal(wa)
+				require.NoError(t, err)
+				return string(body)
+			},
+			mock: func(t *testing.T, msvc *deadmansswitchmock.Service) {
+				expAlerts := getBaseAlerts()
+				msvc.On("PushSwitch", mock.Anything, expAlerts).Once().Return(nil)
+			},
+			expCode: http.StatusOK,
+		},
+
+		"Dead man's switch request should be handled correctly (with custom params).": {
+			config: alertmanager.Config{
+				DeadMansSwitchPath: "/dead-mans-switch",
+			},
+			urlPath: "/dead-mans-switch",
+			webhookAlertJSON: func(t *testing.T) string {
+				wa := getBaseAlertmanagerAlerts()
+				body, err := json.Marshal(wa)
+				require.NoError(t, err)
+				return string(body)
+			},
+			mock: func(t *testing.T, msvc *deadmansswitchmock.Service) {
+				expAlerts := getBaseAlerts()
+				msvc.On("PushSwitch", mock.Anything, expAlerts).Once().Return(nil)
+			},
+			expCode: http.StatusOK,
+		},
+
+		"Dead man's switch webhook internal errors should be propagated to clients (PushSwitch).": {
+			urlPath: "/alerts/dms",
+			webhookAlertJSON: func(t *testing.T) string {
+				wa := getBaseAlertmanagerAlerts()
+				body, err := json.Marshal(wa)
+				require.NoError(t, err)
+				return string(body)
+			},
+			mock: func(t *testing.T, msvc *deadmansswitchmock.Service) {
+				expAlerts := getBaseAlerts()
+				msvc.On("PushSwitch", mock.Anything, expAlerts).Once().Return(errors.New("whatever"))
+			},
+			expCode: http.StatusInternalServerError,
+		},
+
+		"Dead man's switch webhook configuration errors should be propagated to clients (PushSwitch).": {
+			urlPath: "/alerts/dms",
+			webhookAlertJSON: func(t *testing.T) string {
+				wa := getBaseAlertmanagerAlerts()
+				body, err := json.Marshal(wa)
+				require.NoError(t, err)
+				return string(body)
+			},
+			mock: func(t *testing.T, msvc *deadmansswitchmock.Service) {
+				expAlerts := getBaseAlerts()
+				err := fmt.Errorf("custom error: %w", internalerrors.ErrInvalidConfiguration)
+				msvc.On("PushSwitch", mock.Anything, expAlerts).Once().Return(err)
+			},
+			expCode: http.StatusBadRequest,
+		},
+
+		"Dead man's switch webhook configuration errors on notification should be propagated to clients (alert mapping).": {
+			urlPath: "/alerts/dms",
+			webhookAlertJSON: func(t *testing.T) string {
+				wa := getBaseAlertmanagerAlerts()
+				wa.Version = "v3"
+				body, err := json.Marshal(wa)
+				require.NoError(t, err)
+				return string(body)
+			},
+			mock:    func(t *testing.T, msvc *deadmansswitchmock.Service) {},
+			expCode: http.StatusBadRequest,
+		},
+
+		"Dead man's switch configuration errors on notification should be propagated to clients (JSON formatting).": {
+			urlPath: "/alerts/dms",
+			webhookAlertJSON: func(t *testing.T) string {
+				return "{"
+			},
+			mock:    func(t *testing.T, msvc *deadmansswitchmock.Service) {},
+			expCode: http.StatusBadRequest,
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert := assert.New(t)
+			require := require.New(t)
+
+			// Mocks.
+			mfw := &forwardmock.Service{}
+			mdms := &deadmansswitchmock.Service{}
+			test.mock(t, mdms)
+
+			// Execute.
+			test.config.ForwardService = mfw
+			test.config.DeadMansSwitchService = mdms
+			h, err := alertmanager.NewHandler(test.config)
+			require.NoError(err)
+			srv := httptest.NewServer(h)
+			defer srv.Close()
+			req, err := http.NewRequest(http.MethodPost, srv.URL+test.urlPath, strings.NewReader(test.webhookAlertJSON(t)))
+			require.NoError(err)
+			resp, err := http.DefaultClient.Do(req)
+			require.NoError(err)
+
+			// Check.
+			assert.Equal(test.expCode, resp.StatusCode)
+			mfw.AssertExpectations(t)
+			mdms.AssertExpectations(t)
 		})
 	}
 }

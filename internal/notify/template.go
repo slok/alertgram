@@ -81,7 +81,7 @@ var defTemplate = template.Must(template.New("def").Funcs(sprig.FuncMap()).Parse
 	{{-  end }}
   {{- end}}
   {{- range $key, $value := .Annotations }}
-  	{{- if ne $key "message" }}  
+	{{- if ne $key "message" }}
 	{{- if hasPrefix "http" $value }}
 	🔸 <a href="{{ $value }}">{{ $key }}</a>
 	{{- else }}

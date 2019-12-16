@@ -9,18 +9,21 @@ import (
 	metricsmiddleware "github.com/slok/go-http-metrics/middleware"
 	metricsmiddlewaregin "github.com/slok/go-http-metrics/middleware/gin"
 
+	"github.com/slok/alertgram/internal/deadmansswitch"
 	"github.com/slok/alertgram/internal/forward"
 	"github.com/slok/alertgram/internal/log"
 )
 
 // Config is the configuration of the WebhookHandler.
 type Config struct {
-	MetricsRecorder   metrics.Recorder
-	WebhookPath       string
-	ChatIDQueryString string
-	Forwarder         forward.Service
-	Debug             bool
-	Logger            log.Logger
+	MetricsRecorder       metrics.Recorder
+	WebhookPath           string
+	ChatIDQueryString     string
+	ForwardService        forward.Service
+	DeadMansSwitchPath    string
+	DeadMansSwitchService deadmansswitch.Service
+	Debug                 bool
+	Logger                log.Logger
 }
 
 func (c *Config) defaults() error {
@@ -28,12 +31,20 @@ func (c *Config) defaults() error {
 		c.WebhookPath = "/alerts"
 	}
 
-	if c.Forwarder == nil {
+	if c.ForwardService == nil {
 		return fmt.Errorf("forward can't be nil")
 	}
 
 	if c.ChatIDQueryString == "" {
 		c.ChatIDQueryString = "chat-id"
+	}
+
+	if c.DeadMansSwitchService == nil {
+		c.DeadMansSwitchService = deadmansswitch.DisabledService
+	}
+
+	if c.DeadMansSwitchPath == "" {
+		c.DeadMansSwitchPath = "/alerts/dms"
 	}
 
 	if c.Logger == nil {
@@ -45,10 +56,11 @@ func (c *Config) defaults() error {
 
 // More info here: https://prometheus.io/docs/alerting/configuration/#webhook_config.
 type webhookHandler struct {
-	cfg       Config
-	engine    *gin.Engine
-	forwarder forward.Service
-	logger    log.Logger
+	cfg              Config
+	engine           *gin.Engine
+	forwarder        forward.Service
+	deadmansswitcher deadmansswitch.Service
+	logger           log.Logger
 }
 
 // NewHandler is an HTTP handler that knows how to handle
@@ -64,10 +76,11 @@ func NewHandler(cfg Config) (http.Handler, error) {
 	}
 
 	w := webhookHandler{
-		cfg:       cfg,
-		engine:    gin.New(),
-		forwarder: cfg.Forwarder,
-		logger:    cfg.Logger,
+		cfg:              cfg,
+		engine:           gin.New(),
+		forwarder:        cfg.ForwardService,
+		deadmansswitcher: cfg.DeadMansSwitchService,
+		logger:           cfg.Logger,
 	}
 
 	// Metrics middleware.
@@ -85,4 +98,9 @@ func NewHandler(cfg Config) (http.Handler, error) {
 
 func (w webhookHandler) routes() {
 	w.engine.POST(w.cfg.WebhookPath, w.HandleAlerts())
+
+	// Only enable dead man's switch if required.
+	if w.deadmansswitcher != nil && w.deadmansswitcher != deadmansswitch.DisabledService {
+		w.engine.POST(w.cfg.DeadMansSwitchPath, w.HandleDeadMansSwitch())
+	}
 }
