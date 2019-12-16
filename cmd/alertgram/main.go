@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -14,6 +15,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	metricsmiddleware "github.com/slok/go-http-metrics/middleware"
 
+	"github.com/slok/alertgram/internal/deadmansswitch"
 	"github.com/slok/alertgram/internal/forward"
 	internalhttp "github.com/slok/alertgram/internal/http"
 	"github.com/slok/alertgram/internal/http/alertmanager"
@@ -82,22 +84,44 @@ func (m *Main) Run() error {
 	}
 	notifier = forward.NewMeasureNotifier(metricsRecorder, notifier)
 
-	// Domain services.
-	forwardSvc := forward.NewService([]forward.Notifier{notifier}, m.logger)
-	forwardSvc = forward.NewMeasureService(metricsRecorder, forwardSvc)
 	var g run.Group
 
 	// Alertmanager webhook server.
 	{
+
+		// Alert forward.
+		forwardSvc := forward.NewService([]forward.Notifier{notifier}, m.logger)
+		forwardSvc = forward.NewMeasureService(metricsRecorder, forwardSvc)
+
+		// Dead man's switch.
+		ctx, ctxCancel := context.WithCancel(context.Background())
+		var deadMansSwitchSvc deadmansswitch.Service = deadmansswitch.DisabledService // By default disabled.
+		if m.cfg.DMSEnable {
+			deadMansSwitchSvc, err = deadmansswitch.NewService(ctx, deadmansswitch.Config{
+				CustomChatID: m.cfg.DMSChatID,
+				Notifiers:    []forward.Notifier{notifier},
+				Interval:     m.cfg.DMSInterval,
+				Logger:       m.logger,
+			})
+			if err != nil {
+				ctxCancel()
+				return err
+			}
+		}
+
+		// API server.
 		logger := m.logger.WithValues(log.KV{"server": "alertmanager-handler"})
 		h, err := alertmanager.NewHandler(alertmanager.Config{
-			Debug:           m.cfg.DebugMode,
-			MetricsRecorder: metricsRecorder,
-			WebhookPath:     m.cfg.AlertmanagerWebhookPath,
-			Forwarder:       forwardSvc,
-			Logger:          logger,
+			Debug:                 m.cfg.DebugMode,
+			MetricsRecorder:       metricsRecorder,
+			WebhookPath:           m.cfg.AlertmanagerWebhookPath,
+			DeadMansSwitchService: deadMansSwitchSvc,
+			DeadMansSwitchPath:    m.cfg.AlertmanagerDMSPath,
+			ForwardService:        forwardSvc,
+			Logger:                logger,
 		})
 		if err != nil {
+			ctxCancel()
 			return err
 		}
 		server, err := internalhttp.NewServer(internalhttp.Config{
@@ -106,6 +130,7 @@ func (m *Main) Run() error {
 			Logger:        logger,
 		})
 		if err != nil {
+			ctxCancel()
 			return err
 		}
 
@@ -114,6 +139,7 @@ func (m *Main) Run() error {
 				return server.ListenAndServe()
 			},
 			func(_ error) {
+				ctxCancel()
 				if err := server.DrainAndShutdown(); err != nil {
 					logger.Errorf("error while draining connections")
 				}

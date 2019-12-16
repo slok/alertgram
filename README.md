@@ -9,6 +9,7 @@ Alertgram is the easiest way to forward alerts to [Telegram] (Supports [Promethe
 ## Table of contents
 
 - [Introduction](#introduction)
+- [Features](#features)
 - [Input alerts](#input-alerts)
 - [Options](#options)
 - [Run](#run)
@@ -17,14 +18,27 @@ Alertgram is the easiest way to forward alerts to [Telegram] (Supports [Promethe
 - [Metrics](#metrics)
 - [Development and debugging](#development-and-debugging)
 - [FAQ](#faq)
-  - [Only alertmanager alerts are supported?](#only-alertmanager-alerts-are-supported-)
-  - [Where does alertgram listen to alertmanager alerts?](#where-does-alertgram-listen-to-alertmanager-alerts-)
-  - [Can I notify to different chats?](#can-i-notify-to-different-chats-)
-  - [Can I use custom templates?](#can-i-use-custom-templates-)
+  - [Only alertmanager alerts are supported?](#only-alertmanager-alerts-are-supported)
+  - [Where does alertgram listen to alertmanager alerts?](#where-does-alertgram-listen-to-alertmanager-alerts)
+  - [Can I notify to different chats?](#can-i-notify-to-different-chats)
+  - [Can I use custom templates?](#can-i-use-custom-templates)
+  - [Dead man's switch?](#dead-mans-switch)
 
 ## Introduction
 
-Everything started as a way of forwarding [Prometheus alertmanager] alerts to [Telegram] because the solutions that I found were too complex, I just wanted to forward alerts to channels without trouble. And Alertgram is just that, a simple app that forwards alerts to Telegram groups and channels.
+Everything started as a way of forwarding [Prometheus alertmanager] alerts to [Telegram] because the solutions that I found were too complex, I just wanted to forward alerts to channels without trouble. And Alertgram is just that, a simple app that forwards alerts to Telegram groups and channels and some small features that help like metrics and dead man's switch.
+
+## Features
+
+- Alertmanager alerts webhook receiver compatibility.
+- Telegram notifications.
+- Metrics in Prometheus format.
+- Optional dead man switch endpoint.
+- Optional customizable templates.
+- Configurable notification chat ID targets (with fallback to default chat ID).
+- Easy setup and flexible.
+- Lightweight.
+- Perfect for any environment, from a company cluster to home cheap clusters (e.g [K3S]).
 
 ## Input alerts
 
@@ -117,6 +131,31 @@ To send an alert easily and check the template rendering without an alertmanager
 curl -i http://127.0.0.1:8080/alerts -d @./testdata/alerts/base.json
 ```
 
+### Dead man's switch?
+
+A [dead man's switch][dms] (from now on, DMS) is a technique or process where at regular intervals a signal must be received
+so the DMS is disabled, if that signal is not received it will be activated.
+
+In monitoring this would be: If an alert is not received at regular intervals, the switch will be activated and notify that we
+are not receiving alerts, this is mostly used to know that our alerting system is working.
+
+For example we would set Prometheus triggering an alert continously, Alertmanager sending this specific alert
+every `7m` to the DMS endpoint in Alertgram, and Alertgram would be configured with a `10m` interval DMS.
+
+With this setup if Prometheus fails creating the alert, Alertmanager sending the alert to Alertgram, or Alertgram not receiving
+this alert (e.g. network problems), Alertmanager will send an alert to Telegram to notify us that our monitoring system is broken.
+
+You could use the same alertgram or another instance, usually in other machine, cluster... so if the cluster/machine fails, your
+is isolated and could notify you.
+
+To Enable Alertgram's DMS use `--dead-mans-switch.enable` to enable. By default it will be listening in `/alert/dms`, with a
+`5m` interval and use the telegrams default notifier and chat ID. To customize this settings use:
+
+- `--dead-mans-switch.interval`: To configure the interval.
+- `--dead-mans-switch.chat-id`: To configure the notifier chat, is independent of the notifier
+  although at this moment is Telegram, if not set it will use the notifier default chat target.
+- `--alertmanager.dead-mans-switch-path` To configure the path the alertmanager can send the DMS alerts.
+
 [github-actions-image]: https://github.com/slok/alertgram/workflows/CI/badge.svg
 [github-actions-url]: https://github.com/slok/alertgram/actions
 [goreport-image]: https://goreportcard.com/badge/github.com/slok/alertgram
@@ -131,3 +170,5 @@ curl -i http://127.0.0.1:8080/alerts -d @./testdata/alerts/base.json
 [html go templates]: https://golang.org/pkg/html/template/
 [sprig]: http://masterminds.github.io/sprig
 [query string]: https://en.wikipedia.org/wiki/Query_string
+[k3s]: https://k3s.io/
+[dms]: https://en.wikipedia.org/wiki/Dead_man%27s_switch
