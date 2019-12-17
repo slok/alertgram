@@ -39,7 +39,7 @@ const (
 	defMetricsListenAddr = ":8081"
 	defMetricsPath       = "/metrics"
 	defMetricsHCPath     = "/status"
-	defDMSInterval       = "10m"
+	defDMSInterval       = "15m"
 )
 
 // Config has the configuration of the application.

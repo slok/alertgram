@@ -9,6 +9,7 @@ import (
 	httpmetrics "github.com/slok/go-http-metrics/metrics"
 	httpmetricsprometheus "github.com/slok/go-http-metrics/metrics/prometheus"
 
+	"github.com/slok/alertgram/internal/deadmansswitch"
 	"github.com/slok/alertgram/internal/forward"
 	"github.com/slok/alertgram/internal/notify"
 )
@@ -20,9 +21,10 @@ const prefix = "alertgram"
 type Recorder struct {
 	httpmetrics.Recorder
 
-	forwardServiceOpDurHistogram   *prometheus.HistogramVec
-	forwardNotifierOpDurHistogram  *prometheus.HistogramVec
-	templateRendererOpDurHistogram *prometheus.HistogramVec
+	forwardServiceOpDurHistogram        *prometheus.HistogramVec
+	forwardNotifierOpDurHistogram       *prometheus.HistogramVec
+	templateRendererOpDurHistogram      *prometheus.HistogramVec
+	deadmansswitchServiceOpDurHistogram *prometheus.HistogramVec
 }
 
 // New returns a new Prometheus recorder for the app.
@@ -55,6 +57,14 @@ func New(reg prometheus.Registerer) *Recorder {
 			Help:      "The duration of the operation in template renderer.",
 			Buckets:   prometheus.DefBuckets,
 		}, []string{"type", "operation", "success"}),
+
+		deadmansswitchServiceOpDurHistogram: prometheus.NewHistogramVec(prometheus.HistogramOpts{
+			Namespace: prefix,
+			Subsystem: "dead_mans_switch",
+			Name:      "operation_duration_seconds",
+			Help:      "The duration of the operation in dead man's switch service.",
+			Buckets:   []float64{.0001, .0005, .001, .005, .01, .025, .05, .1, .25, .5, 1},
+		}, []string{"operation", "success"}),
 	}
 
 	// Register all the metrics.
@@ -62,6 +72,7 @@ func New(reg prometheus.Registerer) *Recorder {
 		r.forwardServiceOpDurHistogram,
 		r.forwardNotifierOpDurHistogram,
 		r.templateRendererOpDurHistogram,
+		r.deadmansswitchServiceOpDurHistogram,
 	)
 
 	return r
@@ -82,8 +93,14 @@ func (r Recorder) ObserveTemplateRendererOpDuration(ctx context.Context, rendere
 	r.templateRendererOpDurHistogram.WithLabelValues(rendererType, op, strconv.FormatBool(success)).Observe(t.Seconds())
 }
 
+// ObserveDMSServiceOpDuration satisfies deadmansswitch.ServiceMetricsRecorder interface.
+func (r Recorder) ObserveDMSServiceOpDuration(ctx context.Context, op string, success bool, t time.Duration) {
+	r.deadmansswitchServiceOpDurHistogram.WithLabelValues(op, strconv.FormatBool(success)).Observe(t.Seconds())
+}
+
 // Ensure that the recorder implements the different interfaces of the app.
 var _ forward.NotifierMetricsRecorder = &Recorder{}
 var _ forward.ServiceMetricsRecorder = &Recorder{}
+var _ deadmansswitch.ServiceMetricsRecorder = &Recorder{}
 var _ notify.TemplateRendererMetricsRecorder = &Recorder{}
 var _ httpmetrics.Recorder = &Recorder{}

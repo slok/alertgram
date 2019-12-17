@@ -88,17 +88,17 @@ Also remember that you can use `--debug` flag.
 
 ## FAQ
 
-### Only alertmanager alerts are supported?
+### Only alertmanager alerts are supported?
 
 At this moment yes, but we can add more input alert systems if you want, create an issue
 so we can discuss and implement.
 
-### Where does alertgram listen to alertmanager alerts?
+### Where does alertgram listen to alertmanager alerts?
 
 By default in `0.0.0.0:8080/alerts`, but you can use `--alertmanager.listen-address` and
 `--alertmanager.webhook-path` to customize.
 
-### Can I notify to different chats?
+### Can I notify to different chats?
 
 There are 3 levels where you could customize the notification chat:
 
@@ -149,7 +149,7 @@ You could use the same alertgram or another instance, usually in other machine, 
 is isolated and could notify you.
 
 To Enable Alertgram's DMS use `--dead-mans-switch.enable` to enable. By default it will be listening in `/alert/dms`, with a
-`5m` interval and use the telegrams default notifier and chat ID. To customize this settings use:
+`15m` interval and use the telegrams default notifier and chat ID. To customize this settings use:
 
 - `--dead-mans-switch.interval`: To configure the interval.
 - `--dead-mans-switch.chat-id`: To configure the notifier chat, is independent of the notifier
