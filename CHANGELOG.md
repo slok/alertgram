@@ -2,6 +2,14 @@
 
 ## [unreleased] - YYYY-MM-DD
 
+### Added
+
+- Metrics to dead man's switch service.
+
+### Changed
+
+- Dead man's switch default interval is 15m.
+
 ## [0.2.0] - 2019-12-16
 
 ### Added

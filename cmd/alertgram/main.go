@@ -45,11 +45,6 @@ func (m *Main) Run() error {
 	// Dependencies.
 	metricsRecorder := metricsprometheus.New(prometheus.DefaultRegisterer)
 
-	tgCli, err := tgbotapi.NewBotAPI(m.cfg.TeletramAPIToken)
-	if err != nil {
-		return err
-	}
-
 	// Select the kind of template renderer: default or custom template.
 	var tmplRenderer notify.TemplateRenderer
 	if m.cfg.NotifyTemplate != nil {
@@ -72,6 +67,11 @@ func (m *Main) Run() error {
 	if m.cfg.NotifyDryRun {
 		notifier = notify.NewLogger(tmplRenderer, m.logger)
 	} else {
+		tgCli, err := tgbotapi.NewBotAPI(m.cfg.TeletramAPIToken)
+		if err != nil {
+			return err
+		}
+
 		notifier, err = telegram.NewNotifier(telegram.Config{
 			TemplateRenderer:      tmplRenderer,
 			Client:                tgCli,
@@ -107,6 +107,8 @@ func (m *Main) Run() error {
 				ctxCancel()
 				return err
 			}
+
+			deadMansSwitchSvc = deadmansswitch.NewMeasureService(metricsRecorder, deadMansSwitchSvc)
 		}
 
 		// API server.
