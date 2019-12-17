@@ -24,7 +24,7 @@ const (
 	descMetricsPath        = "The path where the metrics will be being served."
 	descMetricsHCPath      = "The path where the healthcheck will be being served, it uses the same port as the metrics."
 	descDMSEnable          = "Enables the dead man switch, that will send an alert if no alert is received at regular intervals."
-	descDMSInterval        = "The interval the dead mans switch needs to receive an alert to not send a notification alert (in Go time duration)."
+	descDMSInterval        = "The interval the dead mans switch needs to receive an alert to not activate and send a notification alert (in Go time duration)."
 	descDMSChatID          = "The chat ID (group/channel/room) the dead man's witch will sent the alerts. Does not depend on the notifier type and if not set it will be used notifier default chat ID."
 	descDebug              = "Run the application in debug mode."
 	descNotifyDryRun       = "Dry run the notification and show in the terminal instead of sending."
@@ -39,7 +39,7 @@ const (
 	defMetricsListenAddr = ":8081"
 	defMetricsPath       = "/metrics"
 	defMetricsHCPath     = "/status"
-	defDMSInterval       = "5m"
+	defDMSInterval       = "10m"
 )
 
 // Config has the configuration of the application.
