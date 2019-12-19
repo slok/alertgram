@@ -105,9 +105,11 @@ There are 3 levels where you could customize the notification chat:
 - By default: Using the required `--telegram.chat-id` flag.
 - At URL level: using [query string] parameter, e.g. `0.0.0.0:8080/alerts?chat-id=-1009876543210`.
   This query param can be customized with `--alertmanager.chat-id-query-string` flag.
-- At alert level: TODO
+- At alert level: If alerts have a label with the chat ID the alert notification will be forwarded to
+  that label content. Use the flag `--alert.label-chat-id` to customize the label name, by default
+  is `chat_id`.
 
-The preference is in order from the lowest to the highest: Default, URL, Alert.
+The preference is in order from highest to lowest: Alert, URL, Default.
 
 ### Can I use custom templates?
 
