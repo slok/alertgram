@@ -90,7 +90,14 @@ func (m *Main) Run() error {
 	{
 
 		// Alert forward.
-		forwardSvc := forward.NewService([]forward.Notifier{notifier}, m.logger)
+		forwardSvc, err := forward.NewService(forward.ServiceConfig{
+			AlertLabelChatID: m.cfg.AlertLabelChatID,
+			Notifiers:        []forward.Notifier{notifier},
+			Logger:           m.logger,
+		})
+		if err != nil {
+			return err
+		}
 		forwardSvc = forward.NewMeasureService(metricsRecorder, forwardSvc)
 
 		// Dead man's switch.

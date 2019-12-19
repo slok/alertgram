@@ -29,6 +29,7 @@ const (
 	descDebug              = "Run the application in debug mode."
 	descNotifyDryRun       = "Dry run the notification and show in the terminal instead of sending."
 	descNotifyTemplatePath = "The path to set a custom template for the notification messages."
+	descAlertLabelChatID   = "The label of the alert that will carry the chat id to forward the alert."
 )
 
 const (
@@ -40,6 +41,7 @@ const (
 	defMetricsPath       = "/metrics"
 	defMetricsHCPath     = "/status"
 	defDMSInterval       = "15m"
+	defAlertLabelChatID  = "chat_id"
 )
 
 // Config has the configuration of the application.
@@ -59,6 +61,7 @@ type Config struct {
 	NotifyTemplate                 *os.File
 	DebugMode                      bool
 	NotifyDryRun                   bool
+	AlertLabelChatID               string
 
 	app *kingpin.Application
 }
@@ -97,6 +100,7 @@ func (c *Config) registerFlags() {
 	c.app.Flag("dead-mans-switch.chat-id", descDMSChatID).StringVar(&c.DMSChatID)
 	c.app.Flag("notify.dry-run", descNotifyDryRun).BoolVar(&c.NotifyDryRun)
 	c.app.Flag("notify.template-path", descNotifyTemplatePath).FileVar(&c.NotifyTemplate)
+	c.app.Flag("alert.label-chat-id", descAlertLabelChatID).Default(defAlertLabelChatID).StringVar(&c.AlertLabelChatID)
 	c.app.Flag("debug", descDebug).BoolVar(&c.DebugMode)
 }
 

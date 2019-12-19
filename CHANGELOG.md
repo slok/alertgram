@@ -2,6 +2,10 @@
 
 ## [unreleased] - YYYY-MM-DD
 
+### Added
+
+- Forward alerts by custom chat ID based on alert labels.
+
 ## [0.2.1] - 2019-12-17
 
 ### Added
