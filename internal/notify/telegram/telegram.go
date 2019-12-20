@@ -94,6 +94,7 @@ func (n notifier) Notify(ctx context.Context, notification forward.Notification)
 	if err != nil {
 		return fmt.Errorf("could not format the alerts to message: %w", err)
 	}
+	logger = n.logger.WithValues(log.KV{"telegramChatID": msg.ChatID})
 
 	res, err := n.client.Send(msg)
 	if err != nil {
@@ -119,15 +120,15 @@ func (n notifier) getChatID(notification forward.Notification) (int64, error) {
 	return chatID, nil
 }
 
-func (n notifier) createMessage(ctx context.Context, notification forward.Notification) (tgbotapi.Chattable, error) {
+func (n notifier) createMessage(ctx context.Context, notification forward.Notification) (tgbotapi.MessageConfig, error) {
 	chatID, err := n.getChatID(notification)
 	if err != nil {
-		return nil, fmt.Errorf("could not get a valid telegran chat ID: %w", err)
+		return tgbotapi.MessageConfig{}, fmt.Errorf("could not get a valid telegran chat ID: %w", err)
 	}
 
 	data, err := n.tplRenderer.Render(ctx, &notification.AlertGroup)
 	if err != nil {
-		return nil, fmt.Errorf("error rendering alerts to template: %w", err)
+		return tgbotapi.MessageConfig{}, fmt.Errorf("error rendering alerts to template: %w", err)
 	}
 
 	msg := tgbotapi.NewMessage(chatID, data)

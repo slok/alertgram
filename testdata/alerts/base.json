@@ -6,7 +6,7 @@
       "status": "firing",
       "labels": {
         "alertname": "ServicePodIsRestarting",
-        "chatid": "-1001234567890",
+        "chat_id": "myCustomChat1",
         "instance": "10.0.0.221:20464",
         "job": "kubernetes-metrics",
         "owner": "team1",
@@ -26,7 +26,6 @@
       "status": "firing",
       "labels": {
         "alertname": "ServicePodIsRestarting",
-        "chatid": "-1001234567890",
         "instance": "10.0.0.221:20464",
         "job": "kubernetes-metrics",
         "owner": "team1",
@@ -46,7 +45,6 @@
       "status": "firing",
       "labels": {
         "alertname": "ServicePodIsPending",
-        "chatid": "-1001234567890",
         "instance": "10.0.0.221:20464",
         "job": "kubernetes-metrics",
         "owner": "team1",
