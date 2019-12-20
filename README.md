@@ -77,13 +77,6 @@ By default are served on `/metrics` on `0.0.0.0:8081`
 
 You can use the `--notify.dry-run` to show the alerts on the terminal instead of forwarding them to telegram.
 
-Note that the required options are required, so I would suggest to do this before starting to develop with dry-run mode:
-
-```bash
-export ALERTGRAM_TELEGRAM_API_TOKEN=fake
-export ALERTGRAM_TELEGRAM_CHAT_ID=1234567890
-```
-
 Also remember that you can use `--debug` flag.
 
 ## FAQ

@@ -30,7 +30,7 @@ func NewLogger(r TemplateRenderer, l log.Logger) forward.Notifier {
 }
 
 func (l logger) Notify(ctx context.Context, n forward.Notification) error {
-	logger := l.logger.WithValues(log.KV{"alertGroup": n.AlertGroup.ID, "alertsNumber": len(n.AlertGroup.Alerts)})
+	logger := l.logger.WithValues(log.KV{"chatID": n.ChatID, "alertGroup": n.AlertGroup.ID, "alertsNumber": len(n.AlertGroup.Alerts)})
 
 	alertText, err := l.renderer.Render(ctx, &n.AlertGroup)
 	if err != nil {
