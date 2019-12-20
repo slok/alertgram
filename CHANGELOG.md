@@ -6,6 +6,10 @@
 
 - Forward alerts by custom chat ID based on alert labels.
 
+### Changed
+
+- Telegram required flags/envs are not required when using notify dry run mode.
+
 ## [0.2.1] - 2019-12-17
 
 ### Added

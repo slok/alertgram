@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"time"
 
@@ -90,8 +91,8 @@ func (c *Config) registerFlags() {
 	c.app.Flag("alertmanager.webhook-path", descAMWebhookPath).Default(defAMWebhookPath).StringVar(&c.AlertmanagerWebhookPath)
 	c.app.Flag("alertmanager.chat-id-query-string", descAMChatIDQS).Default(defAMChatIDQS).StringVar(&c.AlertmanagerChatIDQQueryString)
 	c.app.Flag("alertmanager.dead-mans-switch-path", descAMDMSPath).Default(defAMDMSPath).StringVar(&c.AlertmanagerDMSPath)
-	c.app.Flag("telegram.api-token", descTelegramAPIToken).Required().StringVar(&c.TeletramAPIToken)
-	c.app.Flag("telegram.chat-id", descTelegramDefChatID).Required().Int64Var(&c.TelegramChatID)
+	c.app.Flag("telegram.api-token", descTelegramAPIToken).StringVar(&c.TeletramAPIToken)
+	c.app.Flag("telegram.chat-id", descTelegramDefChatID).Int64Var(&c.TelegramChatID)
 	c.app.Flag("metrics.listen-address", descMetricsListenAddr).Default(defMetricsListenAddr).StringVar(&c.MetricsListenAddr)
 	c.app.Flag("metrics.path", descMetricsPath).Default(defMetricsPath).StringVar(&c.MetricsPath)
 	c.app.Flag("metrics.health-path", descMetricsHCPath).Default(defMetricsHCPath).StringVar(&c.MetricsHCPath)
@@ -105,5 +106,14 @@ func (c *Config) registerFlags() {
 }
 
 func (c *Config) validate() error {
+	if !c.NotifyDryRun {
+		if c.TeletramAPIToken == "" {
+			return errors.New("telegram api token is required")
+		}
+
+		if c.TelegramChatID == 0 {
+			return errors.New("telegram default chat ID is required")
+		}
+	}
 	return nil
 }
