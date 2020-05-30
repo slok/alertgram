@@ -14,6 +14,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	metricsmiddleware "github.com/slok/go-http-metrics/middleware"
+	metricsmiddlewarestd "github.com/slok/go-http-metrics/middleware/std"
 
 	"github.com/slok/alertgram/internal/deadmansswitch"
 	"github.com/slok/alertgram/internal/forward"
@@ -162,7 +163,7 @@ func (m *Main) Run() error {
 		mux.Handle(m.cfg.MetricsPath, promhttp.Handler())
 		mux.Handle(m.cfg.MetricsHCPath, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { _, _ = w.Write([]byte(`{"status":"ok"}`)) }))
 		mdlw := metricsmiddleware.New(metricsmiddleware.Config{Service: "metrics", Recorder: metricsRecorder})
-		h := mdlw.Handler("", mux)
+		h := metricsmiddlewarestd.Handler("", mdlw, mux)
 		server, err := internalhttp.NewServer(internalhttp.Config{
 			Handler:       h,
 			ListenAddress: m.cfg.MetricsListenAddr,

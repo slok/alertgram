@@ -28,15 +28,15 @@ help: ## Show this help
 default: build
 
 .PHONY: build-image
-build-image: ## Builds the production docker image.
+build-image: ## Builds the production docker image.
 	@$(BUILD_PROD_IMAGE_CMD)
 
 .PHONY: publish-image
-publish-image: ##Publishes the production docker image.
+publish-image: ## Publishes the production docker image.
 	@$(PUBLISH_PROD_IMAGE_CMD)
 
 .PHONY: build-dev-image
-build-dev-image:  ## Builds the development docker image.
+build-dev-image:  ## Builds the development docker image.
 	@$(BUILD_DEV_IMAGE_CMD)
 
 build: build-dev-image ## Builds the production binary.
