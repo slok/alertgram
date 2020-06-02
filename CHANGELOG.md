@@ -2,6 +2,13 @@
 
 ## [unreleased] - YYYY-MM-DD
 
+## [0.3.1] - 2019-06-02
+
+### Changed
+
+- Update libraries.
+- Use Go 1.14.
+
 ## [0.3.0] - 2019-12-20
 
 ### Added
