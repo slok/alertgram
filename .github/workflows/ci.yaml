@@ -7,7 +7,7 @@ jobs:
     name: Check
     runs-on: ubuntu-latest
     # Execute the checks inside the container instead the VM.
-    container: golangci/golangci-lint:v1.27.0-alpine
+    container: golangci/golangci-lint:v1.34.1-alpine
     steps:
       - uses: actions/checkout@v1
       - run: golangci-lint run -E goimports
@@ -16,10 +16,10 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-go@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
         with:
-          go-version: 1.14
+          go-version: 1.15
       - run: make ci-test
 
   release-image:
@@ -34,9 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     # Only run in master and when has a tag.
     steps:
-      - name: Set tag on VERSION env var
-        run: echo ::set-env name=VERSION::$(echo ${GITHUB_REF:10})
-      - uses: actions/checkout@v1
+      - run: echo "VERSION=${GITHUB_REF#refs/*/}" >> ${GITHUB_ENV} # Sets VERSION env var.
+      - uses: actions/checkout@v2
       - name: Build image
         run: make build-image
       - name: Docker login
