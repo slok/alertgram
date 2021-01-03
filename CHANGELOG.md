@@ -2,10 +2,17 @@
 
 ## [unreleased] - YYYY-MM-DD
 
+## [0.3.2] - 2021-01-03
+
 ### Added
 
 - Default template supports resolved alerts
 - Helpers on alert group model to group alerts by status.
+
+### Changed
+
+- Update libraries.
+- Use Go 1.15.
 
 ## [0.3.1] - 2019-06-02
 
@@ -56,7 +63,8 @@
 - Alertmanager compatible webhook API.
 - Models and forwarding domain service.
 
-[unreleased]: https://github.com/slok/alertgram/compare/v0.3.1...HEAD
+[unreleased]: https://github.com/slok/alertgram/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/slok/alertgram/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/slok/alertgram/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/slok/alertgram/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/slok/alertgram/compare/v0.2.0...v0.2.1
