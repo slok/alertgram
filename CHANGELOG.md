@@ -2,6 +2,11 @@
 
 ## [unreleased] - YYYY-MM-DD
 
+### Added
+
+- Default template supports resolved alerts
+- Helpers on alert group model to group alerts by status.
+
 ## [0.3.1] - 2019-06-02
 
 ### Changed

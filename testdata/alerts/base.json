@@ -59,6 +59,25 @@
       },
       "startsAt": "2019-12-06T20:46:37.903Z",
       "generatorURL": "https://example.com/graph"
+    },
+    {
+      "status": "resolved",
+      "labels": {
+        "alertname": "ServicePodIsPending",
+        "instance": "10.0.0.221:20464",
+        "job": "kubernetes-metrics2",
+        "owner": "team1",
+        "severity": "telegram",
+        "env": "production",
+        "pod": "ns3/pod-service3-954bb8c86-p6svs"
+      },
+      "annotations": {
+        "message": "The has been pending more than 10 minutes",
+        "Graph": "https://prometheus.test/d/taQlRuxik/k8s-cluster-summary?orgId=1&refresh=30s&fullscreen&panelId=11&from=now-3h&to=now&var-cluster=prometheus&var-ds=&var-datasource=prometheus&var-node=k8s-master&var-namespace=monitoring",
+        "Runbook": "https://github.test/runbooks/pod-restarting.md"
+      },
+      "startsAt": "2019-12-06T20:46:37.903Z",
+      "generatorURL": "https://example.com/graph"
     }
   ],
   "groupLabels": {

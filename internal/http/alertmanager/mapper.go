@@ -27,10 +27,9 @@ func (a alertGroupV4) toDomain() (*model.AlertGroup, error) {
 	}
 
 	// Map alerts.
-	alerts := make([]model.Alert, len(a.Alerts))
-	for i := 0; i < len(a.Alerts); i++ {
-		alert := a.Alerts[i]
-		alerts[i] = model.Alert{
+	alerts := make([]model.Alert, 0, len(a.Alerts))
+	for _, alert := range a.Alerts {
+		modelAlert := model.Alert{
 			ID:           alert.Fingerprint,
 			Name:         alert.Labels[prommodel.AlertNameLabel],
 			StartsAt:     alert.StartsAt,
@@ -40,6 +39,7 @@ func (a alertGroupV4) toDomain() (*model.AlertGroup, error) {
 			Annotations:  alert.Annotations,
 			GeneratorURL: alert.GeneratorURL,
 		}
+		alerts = append(alerts, modelAlert)
 	}
 
 	ag := &model.AlertGroup{

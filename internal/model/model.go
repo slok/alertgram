@@ -51,6 +51,39 @@ type AlertGroup struct {
 	ID string
 	// Labels are the labels of the group.
 	Labels map[string]string
-	// Alerts are the alerts in the group.
+	// Alerts are all the alerts in the group (firing, resolved, unknown...).
 	Alerts []Alert
+}
+
+// FiringAlerts returns the firing alerts.
+func (a AlertGroup) FiringAlerts() []Alert { return a.groupByStatusAlerts(AlertStatusFiring) }
+
+// ResolvedAlerts returns the resolved alerts.
+func (a AlertGroup) ResolvedAlerts() []Alert { return a.groupByStatusAlerts(AlertStatusResolved) }
+
+// HasFiring returns true if it has firing alerts.
+func (a AlertGroup) HasFiring() bool { return a.hasAlertByStatus(AlertStatusFiring) }
+
+// HasResolved returns true if it has resolved alerts.
+func (a AlertGroup) HasResolved() bool { return a.hasAlertByStatus(AlertStatusResolved) }
+
+func (a AlertGroup) hasAlertByStatus(status AlertStatus) bool {
+	for _, al := range a.Alerts {
+		if al.Status == status {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (a AlertGroup) groupByStatusAlerts(status AlertStatus) []Alert {
+	var alerts []Alert
+	for _, al := range a.Alerts {
+		if al.Status == status {
+			alerts = append(alerts, al)
+		}
+	}
+
+	return alerts
 }
