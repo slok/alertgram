@@ -45,11 +45,14 @@ func getBaseAlerts() *model.AlertGroup {
 	al1.ID += "-1"
 	al2 := getBaseAlert()
 	al2.ID += "-2"
+	al3 := getBaseAlert()
+	al3.ID += "-3"
+	al3.Status = model.AlertStatusResolved
 
 	return &model.AlertGroup{
 		ID:     "test-group",
 		Labels: map[string]string{"glK1": "glV1", "glK2": "glV2"},
-		Alerts: []model.Alert{al1, al2},
+		Alerts: []model.Alert{al1, al2, al3},
 	}
 }
 
@@ -70,12 +73,15 @@ func getBaseAlertmanagerAlerts() webhook.Message {
 	al1.Fingerprint += "-1"
 	al2 := getBaseAlertmanagerAlert()
 	al2.Fingerprint += "-2"
+	al3 := getBaseAlertmanagerAlert()
+	al3.Fingerprint += "-3"
+	al3.Status = string(prommodel.AlertResolved)
 
 	return webhook.Message{
 		Data: &template.Data{
 			Receiver:          "test-recv",
 			Status:            string(prommodel.AlertFiring),
-			Alerts:            template.Alerts{al1, al2},
+			Alerts:            template.Alerts{al1, al2, al3},
 			GroupLabels:       map[string]string{"glK1": "glV1", "glK2": "glV2"},
 			CommonLabels:      map[string]string{"gclK1": "gclV1", "gclK2": "gclV2"},
 			CommonAnnotations: map[string]string{"gcaK1": "gcaV1", "gcaK2": "gcaV2"},

@@ -13,12 +13,13 @@ import (
 
 func TestTemplateRenderer(t *testing.T) {
 	tests := map[string]struct {
-		alertGroup *model.AlertGroup
+		alertGroup func() *model.AlertGroup
 		renderer   func() notify.TemplateRenderer
 		expData    string
 		expErr     error
 	}{
 		"Invalid template should return an error.": {
+			alertGroup: func() *model.AlertGroup { return nil },
 			renderer: func() notify.TemplateRenderer {
 				r, _ := notify.NewHTMLTemplateRenderer("{{ .ID }}")
 				return r
@@ -27,9 +28,11 @@ func TestTemplateRenderer(t *testing.T) {
 		},
 
 		"Custom template should render the alerts correctly.": {
-			alertGroup: &model.AlertGroup{
-				ID:     "test-alert",
-				Alerts: []model.Alert{{}, {}, {}},
+			alertGroup: func() *model.AlertGroup {
+				return &model.AlertGroup{
+					ID:     "test-alert",
+					Alerts: []model.Alert{{}, {}, {}},
+				}
 			},
 			renderer: func() notify.TemplateRenderer {
 				r, _ := notify.NewHTMLTemplateRenderer("{{ .ID }} has {{ .Alerts | len }} alerts.")
@@ -39,51 +42,52 @@ func TestTemplateRenderer(t *testing.T) {
 		},
 
 		"Default template should render the alerts correctly.": {
-			alertGroup: &model.AlertGroup{
-				ID: "test-alert",
-				Alerts: []model.Alert{
-					{
-						Status: model.AlertStatusFiring,
-						Labels: map[string]string{
-							"alertname": "ServicePodIsRestarting",
-							"chatid":    "-1001234567890",
-							"job":       "kubernetes-metrics",
-							"owner":     "team1",
-							"pod":       "ns1/pod-service1-f76c976c4-9hlgv",
-							"severity":  "telegram",
-						},
-						Annotations: map[string]string{
-							"message": "There has been restarting more than 5 times over 20 minutes",
-							"graph":   "https://prometheus.test/my-graph",
-							"runbook": "https://github.test/runbooks/pod-restarting.md",
-						},
+			alertGroup: func() *model.AlertGroup {
+				al1 := model.Alert{
+					Status: model.AlertStatusFiring,
+					Labels: map[string]string{
+						"alertname": "ServicePodIsRestarting",
+						"chatid":    "-1001234567890",
+						"job":       "kubernetes-metrics",
+						"owner":     "team1",
+						"pod":       "ns1/pod-service1-f76c976c4-9hlgv",
+						"severity":  "telegram",
 					},
-					{
-						Status: model.AlertStatusFiring,
-						Labels: map[string]string{
-							"alertname": "ServicePodIsRestarting",
-							"chatid":    "-1001234567890",
-							"job":       "kubernetes-metrics",
-							"owner":     "team1",
-							"pod":       "ns1/pod-service64-f5c7dd9cfc5-8scht",
-							"severity":  "telegram",
-						},
-						Annotations: map[string]string{
-							"message": "There has been restarting more than 5 times over 20 minutes",
-							"graph":   "https://prometheus.test/my-graph",
-							"runbook": "https://github.test/runbooks/pod-restarting.md",
-						},
+					Annotations: map[string]string{
+						"message": "There has been restarting more than 5 times over 20 minutes",
+						"graph":   "https://prometheus.test/my-graph",
+						"runbook": "https://github.test/runbooks/pod-restarting.md",
 					},
-					{
-						Status: model.AlertStatusResolved,
-						Labels: map[string]string{
-							"alertname": "ServicePodIsRestarting",
-						},
-						Annotations: map[string]string{
-							"message": "There has been restarting more than 5 times over 20 minutes",
-						},
+				}
+				al2 := model.Alert{
+					Status: model.AlertStatusFiring,
+					Labels: map[string]string{
+						"alertname": "ServicePodIsRestarting",
+						"chatid":    "-1001234567890",
+						"job":       "kubernetes-metrics",
+						"owner":     "team1",
+						"pod":       "ns1/pod-service64-f5c7dd9cfc5-8scht",
+						"severity":  "telegram",
 					},
-				},
+					Annotations: map[string]string{
+						"message": "There has been restarting more than 5 times over 20 minutes",
+						"graph":   "https://prometheus.test/my-graph",
+						"runbook": "https://github.test/runbooks/pod-restarting.md",
+					},
+				}
+				al3 := model.Alert{
+					Status: model.AlertStatusResolved,
+					Labels: map[string]string{
+						"alertname": "ServicePodIsRestarting",
+					},
+					Annotations: map[string]string{
+						"message": "There has been restarting more than 5 times over 20 minutes",
+					},
+				}
+				return &model.AlertGroup{
+					ID:     "test-alert",
+					Alerts: []model.Alert{al1, al2, al3},
+				}
 			},
 			expData: `
 🚨🚨 FIRING ALERTS 🚨🚨
@@ -107,6 +111,11 @@ func TestTemplateRenderer(t *testing.T) {
 	🔹 severity: telegram
 	🔸 <a href="https://prometheus.test/my-graph">graph</a>
 	🔸 <a href="https://github.test/runbooks/pod-restarting.md">runbook</a>
+
+✅✅ RESOLVED ALERTS ✅✅
+
+🟢🟢🟢 <b>ServicePodIsRestarting</b> 🟢🟢🟢
+  There has been restarting more than 5 times over 20 minutes
 `,
 			renderer: func() notify.TemplateRenderer { return notify.DefaultTemplateRenderer },
 		},
@@ -117,7 +126,7 @@ func TestTemplateRenderer(t *testing.T) {
 			assert := assert.New(t)
 
 			r := test.renderer()
-			gotData, err := r.Render(context.TODO(), test.alertGroup)
+			gotData, err := r.Render(context.TODO(), test.alertGroup())
 
 			if test.expErr != nil && assert.Error(err) {
 				assert.True(errors.Is(err, test.expErr))
