@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: alertgram
-          image: slok/alertgram:db08cd4
+          image: slok/alertgram:v0.3.2
           envFrom:
             - secretRef:
                 name: alertgram
