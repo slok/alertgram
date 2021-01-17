@@ -30,7 +30,7 @@ is an alertmanager configuration example that connects with alertgram.
 
 Before deploying this, we assume:
 
-- You are suing prometheus-operator.
+- You are using prometheus-operator.
 - Your alertmanager is `main`, if not change accordingly (labels, names...)
 - Is deployed on `monitoring` namespace.
 
