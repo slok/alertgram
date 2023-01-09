@@ -143,7 +143,7 @@ this alert (e.g. network problems), Alertmanager will send an alert to Telegram 
 You could use the same alertgram or another instance, usually in other machine, cluster... so if the cluster/machine fails, your
 is isolated and could notify you.
 
-To Enable Alertgram's DMS use `--dead-mans-switch.enable` to enable. By default it will be listening in `/alert/dms`, with a
+To Enable Alertgram's DMS use `--dead-mans-switch.enable` to enable. By default it will be listening in `/alerts/dms`, with a
 `15m` interval and use the telegrams default notifier and chat ID. To customize this settings use:
 
 - `--dead-mans-switch.interval`: To configure the interval.
